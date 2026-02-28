@@ -1,10 +1,11 @@
+import WelcomeScreen from './components/WelcomeScreen';
+
 function App() {
-  return (
-    <div>
-      <h1>vdiff</h1>
-      <p>Git diff viewer for AI code review</p>
-    </div>
-  );
+  const handleAddRepository = () => {
+    // Will be wired up to open folder picker dialog via IPC
+  };
+
+  return <WelcomeScreen onAddRepository={handleAddRepository} />;
 }
 
 export default App;

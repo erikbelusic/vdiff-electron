@@ -27,7 +27,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Set up Vitest + React Testing Library (test runner, first passing test)
 
 ### 2. Project Selection (Repository Management)
-- [ ] Welcome/landing screen when no repo is selected
+- [x] Welcome/landing screen when no repo is selected
 - [ ] "Add Repository" button - opens native folder picker dialog
 - [ ] Validate selected folder is a git repository
 - [ ] Persist list of added repos (store in electron-store or JSON file in app data)

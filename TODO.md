@@ -21,7 +21,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 
 ### 1. Project Scaffolding
 - [x] Initialize Electron Forge project with Vite + React template
-- [ ] Set up project structure: `src/main/` (electron), `src/renderer/` (react)
+- [x] Set up project structure: `src/main/` (electron), `src/renderer/` (react)
 - [ ] Configure CSS Modules
 - [ ] Get a blank window rendering a React app with hot-reload
 - [ ] Set up Vitest + React Testing Library (test runner, first passing test)

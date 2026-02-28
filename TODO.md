@@ -20,7 +20,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 ## MVP Features
 
 ### 1. Project Scaffolding
-- [ ] Initialize Electron Forge project with Vite + React template
+- [x] Initialize Electron Forge project with Vite + React template
 - [ ] Set up project structure: `src/main/` (electron), `src/renderer/` (react)
 - [ ] Configure CSS Modules
 - [ ] Get a blank window rendering a React app with hot-reload

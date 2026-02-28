@@ -20,3 +20,22 @@ test('calls onAddRepository when button is clicked', async () => {
   );
   expect(handleAdd).toHaveBeenCalledOnce();
 });
+
+test('displays an error message when provided', () => {
+  render(
+    <WelcomeScreen
+      onAddRepository={() => {}}
+      error="The selected folder is not a Git repository."
+    />,
+  );
+  expect(
+    screen.getByText('The selected folder is not a Git repository.'),
+  ).toBeInTheDocument();
+});
+
+test('does not display an error when none is provided', () => {
+  render(<WelcomeScreen onAddRepository={() => {}} />);
+  expect(
+    screen.queryByText(/not a Git repository/i),
+  ).not.toBeInTheDocument();
+});

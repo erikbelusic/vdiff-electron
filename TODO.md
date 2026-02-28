@@ -29,7 +29,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 ### 2. Project Selection (Repository Management)
 - [x] Welcome/landing screen when no repo is selected
 - [x] "Add Repository" button - opens native folder picker dialog
-- [ ] Validate selected folder is a git repository
+- [x] Validate selected folder is a git repository
 - [ ] Persist list of added repos (store in electron-store or JSON file in app data)
 - [ ] Repository list in sidebar/dropdown (like GitHub Desktop's top-left repo picker)
 - [ ] Remove repository from list (doesn't delete files)

@@ -38,3 +38,8 @@
 .addButton:hover {
   background-color: var(--color-accent-hover);
 }
+
+.error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}

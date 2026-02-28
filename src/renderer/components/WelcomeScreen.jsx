@@ -1,6 +1,6 @@
 import styles from './WelcomeScreen.module.css';
 
-function WelcomeScreen({ onAddRepository }) {
+function WelcomeScreen({ onAddRepository, error }) {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>vdiff</h1>
@@ -11,6 +11,7 @@ function WelcomeScreen({ onAddRepository }) {
       <button className={styles.addButton} onClick={onAddRepository}>
         Add Repository
       </button>
+      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 }

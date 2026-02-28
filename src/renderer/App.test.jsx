@@ -1,8 +1,20 @@
 import { render, screen } from '@testing-library/react';
-import { test, expect } from 'vitest';
+import { test, expect, beforeEach } from 'vitest';
 import App from './App';
 
-test('renders the app title', () => {
+beforeEach(() => {
+  window.electronAPI = {
+    getRepositories: async () => [],
+    getLastOpened: async () => null,
+    selectFolder: async () => ({ path: null }),
+    removeRepository: async () => [],
+    setLastOpened: async () => {},
+  };
+});
+
+test('shows welcome screen when no repos are configured', async () => {
   render(<App />);
-  expect(screen.getByText('vdiff')).toBeInTheDocument();
+  expect(
+    await screen.findByRole('button', { name: /add repository/i }),
+  ).toBeInTheDocument();
 });

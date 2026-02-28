@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import started from 'electron-squirrel-startup';
+import { getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened } from './store.js';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -74,5 +75,11 @@ ipcMain.handle('dialog:selectFolder', async () => {
   if (!isGit) {
     return { path: null, error: 'The selected folder is not a Git repository.' };
   }
+  addRepository(folderPath);
   return { path: folderPath };
 });
+
+ipcMain.handle('repo:getAll', () => getRepositories());
+ipcMain.handle('repo:remove', (_event, repoPath) => removeRepository(repoPath));
+ipcMain.handle('repo:getLastOpened', () => getLastOpened());
+ipcMain.handle('repo:setLastOpened', (_event, repoPath) => setLastOpened(repoPath));

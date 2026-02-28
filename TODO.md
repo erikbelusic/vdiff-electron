@@ -24,7 +24,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Set up project structure: `src/main/` (electron), `src/renderer/` (react)
 - [x] Configure CSS Modules
 - [x] Get a blank window rendering a React app with hot-reload
-- [ ] Set up Vitest + React Testing Library (test runner, first passing test)
+- [x] Set up Vitest + React Testing Library (test runner, first passing test)
 
 ### 2. Project Selection (Repository Management)
 - [ ] Welcome/landing screen when no repo is selected

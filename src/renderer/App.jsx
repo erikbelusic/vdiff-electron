@@ -37,6 +37,14 @@ function App() {
     await window.electronAPI.setLastOpened(repoPath);
   };
 
+  const handleRemoveRepository = async (repoPath) => {
+    const repos = await window.electronAPI.removeRepository(repoPath);
+    setRepositories(repos);
+    if (selectedRepo === repoPath) {
+      setSelectedRepo(repos.length > 0 ? repos[0] : null);
+    }
+  };
+
   if (!selectedRepo) {
     return (
       <WelcomeScreen onAddRepository={handleAddRepository} error={error} />
@@ -50,6 +58,7 @@ function App() {
         selectedRepo={selectedRepo}
         onSelectRepo={handleSelectRepo}
         onAddRepository={handleAddRepository}
+        onRemoveRepository={handleRemoveRepository}
       />
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
         Diff viewer coming soon

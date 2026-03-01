@@ -89,6 +89,27 @@
   max-width: 180px;
 }
 
+.removeButton {
+  display: none;
+  padding: 0 0.3rem;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 3px;
+}
+
+.removeButton:hover {
+  color: var(--color-danger);
+  background: rgba(248, 81, 73, 0.15);
+}
+
+.repoItem:hover .removeButton {
+  display: block;
+}
+
 .addRepoButton {
   display: flex;
   align-items: center;

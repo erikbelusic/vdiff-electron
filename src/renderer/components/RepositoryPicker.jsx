@@ -5,7 +5,7 @@ function getRepoName(repoPath) {
   return repoPath.split('/').pop();
 }
 
-function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepository }) {
+function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository }) {
   const [isOpen, setIsOpen] = useState(false);
   const pickerRef = useRef(null);
 
@@ -37,7 +37,7 @@ function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepos
         <div className={styles.dropdown} role="listbox">
           <div className={styles.repoList}>
             {repositories.map((repo) => (
-              <button
+              <div
                 key={repo}
                 className={`${styles.repoItem} ${repo === selectedRepo ? styles.selected : ''}`}
                 role="option"
@@ -49,7 +49,17 @@ function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepos
               >
                 <span className={styles.repoItemName}>{getRepoName(repo)}</span>
                 <span className={styles.repoItemPath}>{repo}</span>
-              </button>
+                <button
+                  className={styles.removeButton}
+                  aria-label={`Remove ${getRepoName(repo)}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveRepository(repo);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
             ))}
           </div>
           <button

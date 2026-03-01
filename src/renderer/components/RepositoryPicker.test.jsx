@@ -11,6 +11,7 @@ function renderPicker(overrides = {}) {
     selectedRepo: repos[0],
     onSelectRepo: vi.fn(),
     onAddRepository: vi.fn(),
+    onRemoveRepository: vi.fn(),
     ...overrides,
   };
   render(<RepositoryPicker {...props} />);
@@ -49,6 +50,15 @@ test('calls onAddRepository when add button is clicked in dropdown', async () =>
   await userEvent.click(screen.getByRole('button', { name: /add repository/i }));
 
   expect(props.onAddRepository).toHaveBeenCalledOnce();
+});
+
+test('calls onRemoveRepository when remove button is clicked', async () => {
+  const props = renderPicker();
+  await userEvent.click(screen.getByRole('button', { expanded: false }));
+  await userEvent.click(screen.getByRole('button', { name: /remove project-a/i }));
+
+  expect(props.onRemoveRepository).toHaveBeenCalledWith(repos[0]);
+  expect(props.onSelectRepo).not.toHaveBeenCalled();
 });
 
 test('closes dropdown after selecting a repo', async () => {

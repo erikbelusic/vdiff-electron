@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
+import TopBar from './components/TopBar';
 
 function App() {
   const [repositories, setRepositories] = useState([]);
@@ -27,7 +28,13 @@ function App() {
       const repos = await window.electronAPI.getRepositories();
       setRepositories(repos);
       setSelectedRepo(result.path);
+      await window.electronAPI.setLastOpened(result.path);
     }
+  };
+
+  const handleSelectRepo = async (repoPath) => {
+    setSelectedRepo(repoPath);
+    await window.electronAPI.setLastOpened(repoPath);
   };
 
   if (!selectedRepo) {
@@ -36,7 +43,19 @@ function App() {
     );
   }
 
-  return <div>Repo selected: {selectedRepo}</div>;
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <TopBar
+        repositories={repositories}
+        selectedRepo={selectedRepo}
+        onSelectRepo={handleSelectRepo}
+        onAddRepository={handleAddRepository}
+      />
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
+        Diff viewer coming soon
+      </div>
+    </div>
+  );
 }
 
 export default App;

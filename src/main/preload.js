@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeRepository: (repoPath) => ipcRenderer.invoke('repo:remove', repoPath),
   getLastOpened: () => ipcRenderer.invoke('repo:getLastOpened'),
   setLastOpened: (repoPath) => ipcRenderer.invoke('repo:setLastOpened', repoPath),
+  getCurrentBranch: (repoPath) => ipcRenderer.invoke('git:getCurrentBranch', repoPath),
 });

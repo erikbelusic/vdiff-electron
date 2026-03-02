@@ -33,7 +33,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Persist list of added repos (store in electron-store or JSON file in app data)
 - [x] Repository list in sidebar/dropdown (like GitHub Desktop's top-left repo picker)
 - [x] Remove repository from list (doesn't delete files)
-- [ ] Show current branch name next to repo name
+- [x] Show current branch name next to repo name
 - [ ] Remember last-opened repo on app restart
 
 ### 3. GitHub Desktop-Style Layout

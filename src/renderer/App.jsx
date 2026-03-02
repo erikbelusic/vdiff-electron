@@ -5,6 +5,7 @@ import TopBar from './components/TopBar';
 function App() {
   const [repositories, setRepositories] = useState([]);
   const [selectedRepo, setSelectedRepo] = useState(null);
+  const [currentBranch, setCurrentBranch] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -18,6 +19,18 @@ function App() {
     }
     loadRepos();
   }, []);
+
+  useEffect(() => {
+    async function fetchBranch() {
+      if (selectedRepo) {
+        const branch = await window.electronAPI.getCurrentBranch(selectedRepo);
+        setCurrentBranch(branch);
+      } else {
+        setCurrentBranch(null);
+      }
+    }
+    fetchBranch();
+  }, [selectedRepo]);
 
   const handleAddRepository = async () => {
     setError(null);
@@ -59,6 +72,7 @@ function App() {
         onSelectRepo={handleSelectRepo}
         onAddRepository={handleAddRepository}
         onRemoveRepository={handleRemoveRepository}
+        currentBranch={currentBranch}
       />
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
         Diff viewer coming soon

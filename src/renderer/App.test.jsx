@@ -9,6 +9,7 @@ beforeEach(() => {
     selectFolder: async () => ({ path: null }),
     removeRepository: async () => [],
     setLastOpened: async () => {},
+    getCurrentBranch: async () => 'main',
   };
 });
 

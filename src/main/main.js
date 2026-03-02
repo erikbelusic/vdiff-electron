@@ -79,6 +79,18 @@ ipcMain.handle('dialog:selectFolder', async () => {
   return { path: folderPath };
 });
 
+function getCurrentBranch(dirPath) {
+  return new Promise((resolve) => {
+    execFile(
+      'git',
+      ['rev-parse', '--abbrev-ref', 'HEAD'],
+      { cwd: dirPath },
+      (error, stdout) => resolve(error ? null : stdout.trim()),
+    );
+  });
+}
+
+ipcMain.handle('git:getCurrentBranch', (_event, repoPath) => getCurrentBranch(repoPath));
 ipcMain.handle('repo:getAll', () => getRepositories());
 ipcMain.handle('repo:remove', (_event, repoPath) => removeRepository(repoPath));
 ipcMain.handle('repo:getLastOpened', () => getLastOpened());

@@ -34,7 +34,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Repository list in sidebar/dropdown (like GitHub Desktop's top-left repo picker)
 - [x] Remove repository from list (doesn't delete files)
 - [x] Show current branch name next to repo name
-- [ ] Remember last-opened repo on app restart
+- [x] Remember last-opened repo on app restart
 
 ### 3. GitHub Desktop-Style Layout
 - [ ] Top bar: repo selector, current branch display

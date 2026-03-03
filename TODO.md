@@ -48,7 +48,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Click file in sidebar to view its diff
 - [x] Diff rendering: line numbers, +/- prefixes, color-coded lines (green/red/gray)
 - [x] Collapsible hunk headers with @@ line info
-- [ ] Syntax highlighting (highlight.js or similar)
+- [x] Syntax highlighting (highlight.js or similar)
 - [x] Auto-refresh when files change (watch filesystem or poll)
 
 ### 5. Staging/Unstaging (GitHub Desktop Style)

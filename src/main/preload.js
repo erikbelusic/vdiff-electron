@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLastOpened: () => ipcRenderer.invoke('repo:getLastOpened'),
   setLastOpened: (repoPath) => ipcRenderer.invoke('repo:setLastOpened', repoPath),
   getCurrentBranch: (repoPath) => ipcRenderer.invoke('git:getCurrentBranch', repoPath),
+  getChangedFiles: (repoPath) => ipcRenderer.invoke('git:getChangedFiles', repoPath),
+  getFileDiff: (repoPath, filePath) => ipcRenderer.invoke('git:getFileDiff', repoPath, filePath),
 });

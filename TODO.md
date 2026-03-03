@@ -38,7 +38,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 
 ### 3. GitHub Desktop-Style Layout
 - [x] Top bar: repo selector, current branch display
-- [ ] Left sidebar: changed files list with +/- stats and icons (added/modified/deleted)
+- [x] Left sidebar: changed files list with +/- stats and icons (added/modified/deleted)
 - [ ] Right pane: diff viewer for selected file
 - [ ] Bottom area: comment export panel (collapsible, like vdiff's prompt output panel)
 

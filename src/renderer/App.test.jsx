@@ -10,6 +10,8 @@ beforeEach(() => {
     removeRepository: async () => [],
     setLastOpened: async () => {},
     getCurrentBranch: async () => 'main',
+    getChangedFiles: async () => [],
+    getFileDiff: async () => '',
   };
 });
 

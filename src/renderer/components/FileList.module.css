@@ -1,0 +1,92 @@
+.sidebar {
+  width: 300px;
+  min-width: 200px;
+  background: var(--color-bg-secondary);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-size: 0.8rem;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-family);
+}
+
+.fileItem:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.selected {
+  background: var(--color-bg-tertiary);
+  border-left: 2px solid var(--color-accent);
+}
+
+.fileName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filePath {
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0 0.3rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.statusA {
+  color: var(--color-success);
+}
+
+.statusM {
+  color: var(--color-accent);
+}
+
+.statusD {
+  color: var(--color-danger);
+}
+
+.statusR {
+  color: #d29922;
+}
+
+.empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
 import TopBar from './components/TopBar';
 import FileList from './components/FileList';
@@ -24,33 +24,30 @@ function App() {
     loadRepos();
   }, []);
 
-  useEffect(() => {
-    async function fetchBranch() {
-      if (selectedRepo) {
-        const branch = await window.electronAPI.getCurrentBranch(selectedRepo);
-        setCurrentBranch(branch);
-      } else {
-        setCurrentBranch(null);
-      }
+  const refreshRepoState = useCallback(async (repoPath) => {
+    if (!repoPath) {
+      setCurrentBranch(null);
+      setChangedFiles([]);
+      return;
     }
-    fetchBranch();
-  }, [selectedRepo]);
+    const branch = await window.electronAPI.getCurrentBranch(repoPath);
+    setCurrentBranch(branch);
+    const files = await window.electronAPI.getChangedFiles(repoPath);
+    setChangedFiles(files);
+  }, []);
 
   useEffect(() => {
-    async function fetchFiles() {
-      if (selectedRepo) {
-        const files = await window.electronAPI.getChangedFiles(selectedRepo);
-        setChangedFiles(files);
-        if (files.length > 0 && !selectedFile) {
-          setSelectedFile(files[0].path);
-        }
-      } else {
-        setChangedFiles([]);
-        setSelectedFile(null);
-      }
+    refreshRepoState(selectedRepo);
+  }, [selectedRepo, refreshRepoState]);
+
+  // Refresh file list and branch when window regains focus
+  useEffect(() => {
+    function handleFocus() {
+      refreshRepoState(selectedRepo);
     }
-    fetchFiles();
-  }, [selectedRepo]);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [selectedRepo, refreshRepoState]);
 
   const handleAddRepository = async () => {
     setError(null);

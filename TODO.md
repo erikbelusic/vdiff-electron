@@ -47,7 +47,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Addition/deletion line counts per file
 - [x] Click file in sidebar to view its diff
 - [x] Diff rendering: line numbers, +/- prefixes, color-coded lines (green/red/gray)
-- [ ] Collapsible hunk headers with @@ line info
+- [x] Collapsible hunk headers with @@ line info
 - [ ] Syntax highlighting (highlight.js or similar)
 - [x] Auto-refresh when files change (watch filesystem or poll)
 

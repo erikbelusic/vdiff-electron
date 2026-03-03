@@ -4,6 +4,46 @@ import styles from './DiffViewer.module.css';
 
 const PREFIX_MAP = { addition: '+', deletion: '-', context: ' ' };
 
+function Hunk({ hunk }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className={styles.hunk}>
+      <button
+        className={styles.hunkHeader}
+        onClick={() => setCollapsed(!collapsed)}
+        aria-expanded={!collapsed}
+      >
+        <span className={styles.collapseArrow}>{collapsed ? '\u25B6' : '\u25BC'}</span>
+        {hunk.header}
+      </button>
+      {!collapsed && (
+        <table className={styles.table}>
+          <tbody>
+            {hunk.lines.map((line, lineIdx) => (
+              <tr
+                key={lineIdx}
+                className={`${styles.lineRow} ${styles[line.type]}`}
+              >
+                <td className={styles.lineNum}>
+                  {line.oldNum ?? ''}
+                </td>
+                <td className={styles.lineNum}>
+                  {line.newNum ?? ''}
+                </td>
+                <td className={styles.prefix}>
+                  {PREFIX_MAP[line.type]}
+                </td>
+                <td className={styles.content}>{line.content}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 function DiffViewer({ repoPath, filePath }) {
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,30 +92,7 @@ function DiffViewer({ repoPath, filePath }) {
   return (
     <div className={styles.container}>
       {hunks.map((hunk, hunkIdx) => (
-        <div key={hunkIdx} className={styles.hunk}>
-          <div className={styles.hunkHeader}>{hunk.header}</div>
-          <table className={styles.table}>
-            <tbody>
-              {hunk.lines.map((line, lineIdx) => (
-                <tr
-                  key={lineIdx}
-                  className={`${styles.lineRow} ${styles[line.type]}`}
-                >
-                  <td className={styles.lineNum}>
-                    {line.oldNum ?? ''}
-                  </td>
-                  <td className={styles.lineNum}>
-                    {line.newNum ?? ''}
-                  </td>
-                  <td className={styles.prefix}>
-                    {PREFIX_MAP[line.type]}
-                  </td>
-                  <td className={styles.content}>{line.content}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Hunk key={hunkIdx} hunk={hunk} />
       ))}
     </div>
   );

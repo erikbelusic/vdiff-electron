@@ -25,11 +25,28 @@
 }
 
 .hunkHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
   padding: 0.4rem 0.75rem;
   background: rgba(56, 139, 253, 0.1);
   color: var(--color-text-secondary);
   font-size: 11px;
+  font-family: var(--font-mono);
+  border: none;
   border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  text-align: left;
+}
+
+.hunkHeader:hover {
+  background: rgba(56, 139, 253, 0.18);
+}
+
+.collapseArrow {
+  font-size: 9px;
+  flex-shrink: 0;
 }
 
 .table {

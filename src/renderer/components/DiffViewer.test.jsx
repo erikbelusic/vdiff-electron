@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { test, expect, beforeEach, vi } from 'vitest';
 import DiffViewer from './DiffViewer';
 
@@ -36,4 +37,17 @@ test('renders hunk header', async () => {
   expect(
     await screen.findByText(/@@ -1,3 \+1,3 @@ function init\(\)/),
   ).toBeInTheDocument();
+});
+
+test('collapses and expands hunk when header is clicked', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" />);
+
+  const header = await screen.findByRole('button', { expanded: true });
+  expect(screen.getByText('const a = 1;')).toBeInTheDocument();
+
+  await userEvent.click(header);
+  expect(screen.queryByText('const a = 1;')).not.toBeInTheDocument();
+
+  await userEvent.click(header);
+  expect(screen.getByText('const a = 1;')).toBeInTheDocument();
 });

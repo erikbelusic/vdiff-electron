@@ -69,6 +69,25 @@ test('collapses and expands hunk when header is clicked', async () => {
   )).toBeInTheDocument();
 });
 
+test('shift+click selects range and opens comment input', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+
+  // Wait for diff to render
+  const firstLine = await screen.findByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const a = 1;',
+  );
+  const lastLine = screen.getByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 3;',
+  );
+
+  // Click first line (sets anchor)
+  await userEvent.click(firstLine.closest('tr'));
+  // Shift+click last line (selects range)
+  await userEvent.click(lastLine.closest('tr'), { shiftKey: true });
+
+  expect(screen.getByPlaceholderText('Add a comment...')).toBeInTheDocument();
+});
+
 test('clicking a diff line opens comment textarea', async () => {
   render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
 

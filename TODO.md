@@ -53,7 +53,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 
 ### 5. Line Commenting System
 - [x] Click a diff line to add a comment (single line)
-- [ ] Click + drag or shift+click for multiline selection
+- [x] Click + drag or shift+click for multiline selection
 - [ ] Comment input textarea with save/cancel
 - [ ] Visual indicators on commented lines (purple border like vdiff)
 - [ ] Edit existing comments by clicking them

@@ -110,6 +110,10 @@
   background: transparent;
 }
 
+.selected {
+  background: rgba(56, 139, 253, 0.2) !important;
+}
+
 .commentRow td {
   padding: 0;
 }

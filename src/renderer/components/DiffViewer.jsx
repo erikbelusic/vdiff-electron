@@ -11,7 +11,7 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function Hunk({ hunk, hunkIdx, language, activeComment, onLineClick, onSaveComment, onCancelComment }) {
+function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, onLineClick, onSaveComment, onCancelComment }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -30,12 +30,19 @@ function Hunk({ hunk, hunkIdx, language, activeComment, onLineClick, onSaveComme
             {hunk.lines.map((line, lineIdx) => {
               const lineId = `${hunkIdx}-${lineIdx}`;
               const isActive = activeComment && activeComment.lineIds.includes(lineId);
+              const isSelected = selectedLineIds && selectedLineIds.has(lineId);
+
+              const rowClasses = [
+                styles.lineRow,
+                styles[line.type],
+                isSelected ? styles.selected : '',
+              ].filter(Boolean).join(' ');
 
               return [
                 <tr
                   key={lineIdx}
-                  className={`${styles.lineRow} ${styles[line.type]}`}
-                  onClick={() => onLineClick(hunkIdx, lineIdx, line)}
+                  className={rowClasses}
+                  onClick={(e) => onLineClick(hunkIdx, lineIdx, line, e)}
                   style={{ cursor: 'pointer' }}
                 >
                   <td className={styles.lineNum}>
@@ -81,6 +88,8 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeComment, setActiveComment] = useState(null);
+  const [selectionAnchor, setSelectionAnchor] = useState(null);
+  const [selectedLineIds, setSelectedLineIds] = useState(new Set());
   const language = useMemo(() => filePath ? getLanguage(filePath) : null, [filePath]);
 
   const fileComments = useMemo(
@@ -107,17 +116,62 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
   // Clear active comment when file changes
   useEffect(() => {
     setActiveComment(null);
+    setSelectionAnchor(null);
+    setSelectedLineIds(new Set());
   }, [filePath]);
 
-  const handleLineClick = (hunkIdx, lineIdx, line) => {
-    const lineId = `${hunkIdx}-${lineIdx}`;
-    const lineNum = line.newNum ?? line.oldNum ?? '';
-    setActiveComment({
-      lineIds: [lineId],
-      lineNum: String(lineNum),
-      code: line.content,
-      type: line.type,
-    });
+  const buildLineId = (hIdx, lIdx) => `${hIdx}-${lIdx}`;
+
+  const handleLineClick = (hunkIdx, lineIdx, line, event) => {
+    if (event.shiftKey && selectionAnchor && selectionAnchor.hunkIdx === hunkIdx) {
+      // Shift+click: select range within same hunk
+      const startIdx = Math.min(selectionAnchor.lineIdx, lineIdx);
+      const endIdx = Math.max(selectionAnchor.lineIdx, lineIdx);
+      const hunk = hunks[hunkIdx];
+
+      const lineIds = [];
+      const codeLines = [];
+      let firstNum = null;
+      let lastNum = null;
+
+      for (let i = startIdx; i <= endIdx; i++) {
+        lineIds.push(buildLineId(hunkIdx, i));
+        codeLines.push(hunk.lines[i].content);
+        const num = hunk.lines[i].newNum ?? hunk.lines[i].oldNum;
+        if (num != null) {
+          if (firstNum === null) firstNum = num;
+          lastNum = num;
+        }
+      }
+
+      const lineNum = firstNum === lastNum ? String(firstNum) : `${firstNum}-${lastNum}`;
+
+      setSelectedLineIds(new Set(lineIds));
+      setActiveComment({
+        lineIds,
+        lineNum,
+        code: codeLines.join('\n'),
+        type: line.type,
+      });
+    } else {
+      // Normal click: single line
+      const lineId = buildLineId(hunkIdx, lineIdx);
+      const lineNum = line.newNum ?? line.oldNum ?? '';
+      setSelectionAnchor({ hunkIdx, lineIdx });
+      setSelectedLineIds(new Set([lineId]));
+      setActiveComment({
+        lineIds: [lineId],
+        lineNum: String(lineNum),
+        code: line.content,
+        type: line.type,
+      });
+    }
+  };
+
+  const clearSelection = () => {
+    setActiveComment(null);
+    setSelectionAnchor(null);
+    setSelectedLineIds(new Set());
   };
 
   const handleSaveComment = (text) => {
@@ -130,11 +184,11 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
         text,
       });
     }
-    setActiveComment(null);
+    clearSelection();
   };
 
   const handleCancelComment = () => {
-    setActiveComment(null);
+    clearSelection();
   };
 
   if (!filePath) {
@@ -170,6 +224,7 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
           hunkIdx={hunkIdx}
           language={language}
           activeComment={activeComment}
+          selectedLineIds={selectedLineIds}
           onLineClick={handleLineClick}
           onSaveComment={handleSaveComment}
           onCancelComment={handleCancelComment}

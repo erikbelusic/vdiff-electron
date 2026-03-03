@@ -26,9 +26,13 @@ test('shows placeholder when no file is selected', () => {
 test('renders diff lines with additions and deletions', async () => {
   render(<DiffViewer repoPath="/repo" filePath="src/app.js" />);
 
-  expect(await screen.findByText('const b = 3;')).toBeInTheDocument();
-  expect(screen.getByText('const b = 2;')).toBeInTheDocument();
-  expect(screen.getByText('const a = 1;')).toBeInTheDocument();
+  // With syntax highlighting, text is split across spans, so use a function matcher
+  expect(await screen.findByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 3;',
+  )).toBeInTheDocument();
+  expect(screen.getByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 2;',
+  )).toBeInTheDocument();
 });
 
 test('renders hunk header', async () => {
@@ -43,11 +47,17 @@ test('collapses and expands hunk when header is clicked', async () => {
   render(<DiffViewer repoPath="/repo" filePath="src/app.js" />);
 
   const header = await screen.findByRole('button', { expanded: true });
-  expect(screen.getByText('const a = 1;')).toBeInTheDocument();
+  expect(screen.getByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const a = 1;',
+  )).toBeInTheDocument();
 
   await userEvent.click(header);
-  expect(screen.queryByText('const a = 1;')).not.toBeInTheDocument();
+  expect(screen.queryByText((_, el) =>
+    el?.tagName === 'TD' && el.textContent === 'const a = 1;',
+  )).not.toBeInTheDocument();
 
   await userEvent.click(header);
-  expect(screen.getByText('const a = 1;')).toBeInTheDocument();
+  expect(screen.getByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const a = 1;',
+  )).toBeInTheDocument();
 });

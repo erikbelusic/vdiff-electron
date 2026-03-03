@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { parseDiff } from '../utils/parseDiff';
+import { getLanguage, highlightLine } from '../utils/highlight';
+import 'highlight.js/styles/github-dark.css';
 import styles from './DiffViewer.module.css';
 
 const PREFIX_MAP = { addition: '+', deletion: '-', context: ' ' };
 
-function Hunk({ hunk }) {
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function Hunk({ hunk, language }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -34,7 +40,16 @@ function Hunk({ hunk }) {
                 <td className={styles.prefix}>
                   {PREFIX_MAP[line.type]}
                 </td>
-                <td className={styles.content}>{line.content}</td>
+                <td
+                  className={styles.content}
+                  dangerouslySetInnerHTML={
+                    language
+                      ? { __html: highlightLine(line.content, language) || escapeHtml(line.content) }
+                      : undefined
+                  }
+                >
+                  {language ? undefined : line.content}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -47,6 +62,7 @@ function Hunk({ hunk }) {
 function DiffViewer({ repoPath, filePath }) {
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const language = useMemo(() => filePath ? getLanguage(filePath) : null, [filePath]);
 
   useEffect(() => {
     async function loadDiff() {
@@ -92,7 +108,7 @@ function DiffViewer({ repoPath, filePath }) {
   return (
     <div className={styles.container}>
       {hunks.map((hunk, hunkIdx) => (
-        <Hunk key={hunkIdx} hunk={hunk} />
+        <Hunk key={hunkIdx} hunk={hunk} language={language} />
       ))}
     </div>
   );

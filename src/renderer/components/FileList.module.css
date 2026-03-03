@@ -85,6 +85,22 @@
   color: #d29922;
 }
 
+.stats {
+  display: flex;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.statsAdd {
+  color: var(--color-success);
+}
+
+.statsDel {
+  color: var(--color-danger);
+}
+
 .empty {
   padding: 2rem 1rem;
   text-align: center;

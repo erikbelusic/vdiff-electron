@@ -52,6 +52,16 @@ function FileList({ files, selectedFile, onSelectFile }) {
                 <span className={styles.filePath}> {getFileDir(file.path)}</span>
               )}
             </span>
+            {(file.additions > 0 || file.deletions > 0) && (
+              <span className={styles.stats}>
+                {file.additions > 0 && (
+                  <span className={styles.statsAdd}>+{file.additions}</span>
+                )}
+                {file.deletions > 0 && (
+                  <span className={styles.statsDel}>-{file.deletions}</span>
+                )}
+              </span>
+            )}
           </button>
         ))}
       </div>

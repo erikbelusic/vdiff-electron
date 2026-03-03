@@ -25,12 +25,35 @@ export function getCurrentBranch(dirPath) {
     .catch(() => null);
 }
 
+async function getNumStats(dirPath) {
+  const stats = {};
+  // Staged changes
+  const staged = await run(['diff', '--cached', '--numstat'], dirPath).catch(() => '');
+  // Unstaged changes
+  const unstaged = await run(['diff', '--numstat'], dirPath).catch(() => '');
+
+  for (const output of [staged, unstaged]) {
+    for (const line of output.split('\n')) {
+      if (!line) continue;
+      const [add, del, file] = line.split('\t');
+      if (!file) continue;
+      if (!stats[file]) stats[file] = { additions: 0, deletions: 0 };
+      // Binary files show '-' for counts
+      if (add !== '-') stats[file].additions += parseInt(add, 10);
+      if (del !== '-') stats[file].deletions += parseInt(del, 10);
+    }
+  }
+  return stats;
+}
+
 export async function getChangedFiles(dirPath) {
   // Get both staged and unstaged changes in one call
   const output = await run(
     ['status', '--porcelain=v1', '-uall'],
     dirPath,
   );
+
+  const numStats = await getNumStats(dirPath);
 
   return output
     .split('\n')
@@ -54,10 +77,14 @@ export async function getChangedFiles(dirPath) {
         status = 'M';
       }
 
+      const stats = numStats[filePath] || { additions: 0, deletions: 0 };
+
       return {
         path: filePath,
         status,
         staged: staged !== ' ' && staged !== '?',
+        additions: stats.additions,
+        deletions: stats.deletions,
       };
     });
 }

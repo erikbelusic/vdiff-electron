@@ -44,7 +44,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 ### 4. Diff Viewer - Uncommitted Changes
 - [x] Show all uncommitted changes (staged + unstaged) like GitHub Desktop
 - [x] File list in sidebar with change type indicators (M, A, D, R)
-- [ ] Addition/deletion line counts per file
+- [x] Addition/deletion line counts per file
 - [x] Click file in sidebar to view its diff
 - [x] Diff rendering: line numbers, +/- prefixes, color-coded lines (green/red/gray)
 - [ ] Collapsible hunk headers with @@ line info

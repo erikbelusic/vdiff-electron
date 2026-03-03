@@ -4,9 +4,9 @@ import { test, expect, vi } from 'vitest';
 import FileList from './FileList';
 
 const files = [
-  { path: 'src/main.js', status: 'M', staged: false },
-  { path: 'src/components/App.jsx', status: 'A', staged: true },
-  { path: 'old-file.txt', status: 'D', staged: false },
+  { path: 'src/main.js', status: 'M', staged: false, additions: 5, deletions: 2 },
+  { path: 'src/components/App.jsx', status: 'A', staged: true, additions: 20, deletions: 0 },
+  { path: 'old-file.txt', status: 'D', staged: false, additions: 0, deletions: 10 },
 ];
 
 test('shows count of changed files', () => {
@@ -36,6 +36,14 @@ test('shows status badges with correct labels', () => {
   expect(screen.getByLabelText('Modified')).toHaveTextContent('M');
   expect(screen.getByLabelText('Added')).toHaveTextContent('A');
   expect(screen.getByLabelText('Deleted')).toHaveTextContent('D');
+});
+
+test('shows addition and deletion counts', () => {
+  render(<FileList files={files} selectedFile={null} onSelectFile={() => {}} />);
+  expect(screen.getByText('+5')).toBeInTheDocument();
+  expect(screen.getByText('-2')).toBeInTheDocument();
+  expect(screen.getByText('+20')).toBeInTheDocument();
+  expect(screen.getByText('-10')).toBeInTheDocument();
 });
 
 test('calls onSelectFile when a file is clicked', async () => {

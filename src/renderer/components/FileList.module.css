@@ -28,6 +28,7 @@
   padding: 0.4rem 0.75rem;
   cursor: pointer;
   border: none;
+  border-left: 2px solid transparent;
   background: none;
   color: var(--color-text);
   font-size: 0.8rem;
@@ -42,7 +43,7 @@
 
 .selected {
   background: var(--color-bg-tertiary);
-  border-left: 2px solid var(--color-accent);
+  border-left-color: var(--color-accent);
 }
 
 .fileName {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
 import TopBar from './components/TopBar';
 import FileList from './components/FileList';
+import DiffViewer from './components/DiffViewer';
 
 function App() {
   const [repositories, setRepositories] = useState([]);
@@ -100,9 +101,7 @@ function App() {
           selectedFile={selectedFile}
           onSelectFile={setSelectedFile}
         />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-secondary)' }}>
-          {selectedFile ? `Diff for ${selectedFile}` : 'Select a file to view its diff'}
-        </div>
+        <DiffViewer repoPath={selectedRepo} filePath={selectedFile} />
       </div>
     </div>
   );

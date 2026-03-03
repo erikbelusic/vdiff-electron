@@ -3,8 +3,12 @@ import { execFile } from 'node:child_process';
 function run(args, cwd) {
   return new Promise((resolve, reject) => {
     execFile('git', args, { cwd, maxBuffer: 10 * 1024 * 1024 }, (error, stdout) => {
-      if (error) reject(error);
-      else resolve(stdout);
+      if (error) {
+        error.stdout = stdout;
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
     });
   });
 }
@@ -70,19 +74,20 @@ export async function getFileDiff(dirPath, filePath) {
     if (staged) return staged;
     if (unstaged) return unstaged;
 
-    // Untracked file — show entire contents as addition
-    const content = await run(['show', ':' + filePath], dirPath)
-      .catch(() => null);
-    if (content !== null) return content;
-
-    // Truly untracked — read via diff against empty tree
-    return run(
-      ['diff', '--no-index', '/dev/null', filePath],
+    // Untracked file — diff against empty tree to show all lines as additions
+    const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf899d15363da7b23';
+    return await run(
+      ['diff', EMPTY_TREE, '--', filePath],
       dirPath,
-    ).catch((err) => {
-      // git diff --no-index exits with 1 when there are differences
-      if (err.stdout) return err.stdout;
-      return '';
+    ).catch(async () => {
+      // File not in index at all — use diff --no-index
+      try {
+        await run(['diff', '--no-index', '--', '/dev/null', filePath], dirPath);
+        return '';
+      } catch (err) {
+        // git diff --no-index exits with 1 when there are differences
+        return err.stdout || '';
+      }
     });
   } catch {
     return '';

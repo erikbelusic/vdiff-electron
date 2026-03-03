@@ -90,7 +90,7 @@
 }
 
 .removeButton {
-  display: none;
+  visibility: hidden;
   padding: 0 0.3rem;
   border: none;
   background: none;
@@ -107,7 +107,7 @@
 }
 
 .repoItem:hover .removeButton {
-  display: block;
+  visibility: visible;
 }
 
 .addRepoButton {

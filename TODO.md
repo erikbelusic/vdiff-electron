@@ -40,7 +40,6 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Top bar: repo selector, current branch display
 - [x] Left sidebar: changed files list with +/- stats and icons (added/modified/deleted)
 - [x] Right pane: diff viewer for selected file
-- [ ] Bottom area: comment export panel (collapsible, like vdiff's prompt output panel)
 
 ### 4. Diff Viewer - Uncommitted Changes
 - [ ] Show all uncommitted changes (staged + unstaged) like GitHub Desktop
@@ -69,6 +68,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [ ] Keyboard shortcuts: Cmd/Ctrl+Enter to save, Escape to cancel
 
 ### 7. Export to Clipboard
+- [ ] Bottom area: comment export panel (collapsible, like vdiff's prompt output panel)
 - [ ] "Prompt Output" panel showing all comments in LLM-friendly format
 - [ ] Same export format as vdiff CLI:
   ```

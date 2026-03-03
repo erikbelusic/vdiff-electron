@@ -109,3 +109,7 @@
 .context {
   background: transparent;
 }
+
+.commentRow td {
+  padding: 0;
+}

@@ -3,6 +3,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import TopBar from './components/TopBar';
 import FileList from './components/FileList';
 import DiffViewer from './components/DiffViewer';
+import useComments from './hooks/useComments';
 
 function App() {
   const [repositories, setRepositories] = useState([]);
@@ -11,6 +12,7 @@ function App() {
   const [changedFiles, setChangedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
+  const { comments, addComment, updateComment, deleteComment } = useComments();
 
   useEffect(() => {
     async function loadRepos() {
@@ -98,7 +100,14 @@ function App() {
           selectedFile={selectedFile}
           onSelectFile={setSelectedFile}
         />
-        <DiffViewer repoPath={selectedRepo} filePath={selectedFile} />
+        <DiffViewer
+          repoPath={selectedRepo}
+          filePath={selectedFile}
+          comments={comments}
+          onAddComment={addComment}
+          onUpdateComment={updateComment}
+          onDeleteComment={deleteComment}
+        />
       </div>
     </div>
   );

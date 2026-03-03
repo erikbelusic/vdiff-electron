@@ -51,14 +51,8 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Syntax highlighting (highlight.js or similar)
 - [x] Auto-refresh when files change (watch filesystem or poll)
 
-### 5. Staging/Unstaging (GitHub Desktop Style)
-- [ ] Checkboxes next to files to stage/unstage
-- [ ] "Select all" / "Deselect all" controls
-- [ ] Visual distinction between staged and unstaged files
-- [ ] Stage/unstage individual hunks or lines (stretch - do after basic staging works)
-
-### 6. Line Commenting System
-- [ ] Click a diff line to add a comment (single line)
+### 5. Line Commenting System
+- [x] Click a diff line to add a comment (single line)
 - [ ] Click + drag or shift+click for multiline selection
 - [ ] Comment input textarea with save/cancel
 - [ ] Visual indicators on commented lines (purple border like vdiff)
@@ -67,7 +61,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [ ] Comment count badge in toolbar
 - [ ] Keyboard shortcuts: Cmd/Ctrl+Enter to save, Escape to cancel
 
-### 7. Export to Clipboard
+### 6. Export to Clipboard
 - [ ] Bottom area: comment export panel (collapsible, like vdiff's prompt output panel)
 - [ ] "Prompt Output" panel showing all comments in LLM-friendly format
 - [ ] Same export format as vdiff CLI:
@@ -79,11 +73,6 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
   ```
 - [ ] "Copy to Clipboard" button with toast confirmation
 - [ ] Panel is collapsible/toggleable
-
-### 8. Basic Commit Support
-- [ ] Commit message input (summary + description fields, like GitHub Desktop)
-- [ ] Commit button for staged changes
-- [ ] Basic commit validation (non-empty message, files staged)
 
 ---
 

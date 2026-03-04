@@ -74,7 +74,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
                     {language ? undefined : line.content}
                   </td>
                 </tr>,
-                isActive && activeComment.lineIds[activeComment.lineIds.length - 1] === lineId && (
+                isActive && !activeComment.editId && activeComment.lineIds[activeComment.lineIds.length - 1] === lineId && (
                   <tr key={`comment-input-${lineIdx}`} className={styles.commentRow}>
                     <td colSpan={4}>
                       <CommentInput
@@ -89,11 +89,19 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
                   .map((c) => (
                     <tr key={`display-${c.id}`} className={styles.commentRow}>
                       <td colSpan={4}>
-                        <CommentDisplay
-                          comment={c}
-                          onEdit={onEditComment}
-                          onDelete={onDeleteComment}
-                        />
+                        {activeComment && activeComment.editId === c.id ? (
+                          <CommentInput
+                            initialText={activeComment.initialText}
+                            onSave={onSaveComment}
+                            onCancel={onCancelComment}
+                          />
+                        ) : (
+                          <CommentDisplay
+                            comment={c}
+                            onEdit={onEditComment}
+                            onDelete={onDeleteComment}
+                          />
+                        )}
                       </td>
                     </tr>
                   )),
@@ -196,8 +204,18 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
     setSelectedLineIds(new Set());
   };
 
+  const handleEditComment = (comment) => {
+    setActiveComment({
+      editId: comment.id,
+      lineIds: comment.lineIds,
+      initialText: comment.text,
+    });
+  };
+
   const handleSaveComment = (text) => {
-    if (activeComment && onAddComment) {
+    if (activeComment && activeComment.editId) {
+      onUpdateComment(activeComment.editId, text);
+    } else if (activeComment && onAddComment) {
       onAddComment({
         filePath,
         lineIds: activeComment.lineIds,
@@ -251,6 +269,7 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
           onLineClick={handleLineClick}
           onSaveComment={handleSaveComment}
           onCancelComment={handleCancelComment}
+          onEditComment={handleEditComment}
           onDeleteComment={onDeleteComment}
         />
       ))}

@@ -159,3 +159,39 @@ test('saving a comment displays it below the line', async () => {
   expect(screen.getByText('Fix this variable')).toBeInTheDocument();
   expect(screen.getByText('Line 2')).toBeInTheDocument();
 });
+
+test('clicking comment text opens edit with pre-filled text', async () => {
+  const onUpdateComment = vi.fn();
+  const savedComment = {
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-2'],
+    lineNum: '2',
+    code: 'const b = 3;',
+    text: 'Original comment',
+  };
+  render(
+    <DiffViewer
+      repoPath="/repo"
+      filePath="src/app.js"
+      {...defaultProps}
+      comments={[savedComment]}
+      onUpdateComment={onUpdateComment}
+    />
+  );
+
+  // Wait for diff, then click the comment text to edit
+  await screen.findByText('Original comment');
+  await userEvent.click(screen.getByText('Original comment'));
+
+  // Should show textarea with existing text
+  const textarea = screen.getByPlaceholderText('Add a comment...');
+  expect(textarea.value).toBe('Original comment');
+
+  // Clear and type new text, then save
+  await userEvent.clear(textarea);
+  await userEvent.type(textarea, 'Updated comment');
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+  expect(onUpdateComment).toHaveBeenCalledWith(1, 'Updated comment');
+});

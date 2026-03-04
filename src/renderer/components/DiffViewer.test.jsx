@@ -195,3 +195,29 @@ test('clicking comment text opens edit with pre-filled text', async () => {
 
   expect(onUpdateComment).toHaveBeenCalledWith(1, 'Updated comment');
 });
+
+test('clicking delete removes comment', async () => {
+  const onDeleteComment = vi.fn();
+  const savedComment = {
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-2'],
+    lineNum: '2',
+    code: 'const b = 3;',
+    text: 'Delete me',
+  };
+  render(
+    <DiffViewer
+      repoPath="/repo"
+      filePath="src/app.js"
+      {...defaultProps}
+      comments={[savedComment]}
+      onDeleteComment={onDeleteComment}
+    />
+  );
+
+  await screen.findByText('Delete me');
+  await userEvent.click(screen.getByRole('button', { name: 'Delete comment' }));
+
+  expect(onDeleteComment).toHaveBeenCalledWith(1);
+});

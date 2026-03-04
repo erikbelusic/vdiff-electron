@@ -1,4 +1,6 @@
 const path = require('node:path');
+const { execSync } = require('node:child_process');
+const fs = require('node:fs');
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
@@ -10,12 +12,12 @@ module.exports = {
   rebuildConfig: {},
   makers: [
     {
-      name: '@electron-forge/maker-squirrel',
-      config: {},
-    },
-    {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin'],
+    },
+    {
+      name: '@electron-forge/maker-squirrel',
+      config: {},
     },
     {
       name: '@electron-forge/maker-deb',
@@ -26,15 +28,57 @@ module.exports = {
       config: {},
     },
   ],
+  hooks: {
+    postMake: async (_config, makeResults) => {
+      if (process.platform !== 'darwin') return makeResults;
+
+      for (const result of makeResults) {
+        if (result.platform !== 'darwin') continue;
+
+        const appPath = path.join(
+          __dirname,
+          'out',
+          `vdiff-${result.platform}-${result.arch}`,
+          'vdiff.app'
+        );
+
+        if (!fs.existsSync(appPath)) continue;
+
+        const dmgDir = path.join(__dirname, 'out', 'make');
+        fs.mkdirSync(dmgDir, { recursive: true });
+        const dmgPath = path.join(dmgDir, `vdiff-${result.arch}.dmg`);
+
+        // Remove existing DMG if present
+        if (fs.existsSync(dmgPath)) fs.unlinkSync(dmgPath);
+
+        // Create a temporary directory for DMG contents
+        const tmpDir = path.join(__dirname, 'out', '.dmg-tmp');
+        if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true });
+        fs.mkdirSync(tmpDir, { recursive: true });
+
+        // Copy app and create Applications symlink
+        execSync(`cp -R "${appPath}" "${tmpDir}/vdiff.app"`);
+        execSync(`ln -s /Applications "${tmpDir}/Applications"`);
+
+        // Create DMG using hdiutil
+        execSync(
+          `hdiutil create "${dmgPath}" -volname "vdiff" -srcfolder "${tmpDir}" -ov -format UDZO`
+        );
+
+        // Clean up
+        fs.rmSync(tmpDir, { recursive: true });
+
+        result.artifacts.push(dmgPath);
+      }
+      return makeResults;
+    },
+  },
   plugins: [
     {
       name: '@electron-forge/plugin-vite',
       config: {
-        // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
-        // If you are familiar with Vite configuration, it will look really familiar.
         build: [
           {
-            // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
             entry: 'src/main/main.js',
             config: 'vite.main.config.mjs',
             target: 'main',
@@ -53,8 +97,6 @@ module.exports = {
         ],
       },
     },
-    // Fuses are used to enable/disable various Electron functionality
-    // at package time, before code signing the application
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,

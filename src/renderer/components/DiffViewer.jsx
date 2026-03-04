@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { parseDiff } from '../utils/parseDiff';
 import { getLanguage, highlightLine } from '../utils/highlight';
 import CommentInput from './CommentInput';
+import CommentDisplay from './CommentDisplay';
 import 'highlight.js/styles/github-dark.css';
 import styles from './DiffViewer.module.css';
 
@@ -11,7 +12,7 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, onLineClick, onSaveComment, onCancelComment }) {
+function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileComments, onLineClick, onSaveComment, onCancelComment, onEditComment, onDeleteComment }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -66,7 +67,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, onLineC
                   </td>
                 </tr>,
                 isActive && activeComment.lineIds[activeComment.lineIds.length - 1] === lineId && (
-                  <tr key={`comment-${lineIdx}`} className={styles.commentRow}>
+                  <tr key={`comment-input-${lineIdx}`} className={styles.commentRow}>
                     <td colSpan={4}>
                       <CommentInput
                         onSave={onSaveComment}
@@ -75,6 +76,19 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, onLineC
                     </td>
                   </tr>
                 ),
+                ...(fileComments || [])
+                  .filter((c) => c.lineIds[c.lineIds.length - 1] === lineId)
+                  .map((c) => (
+                    <tr key={`display-${c.id}`} className={styles.commentRow}>
+                      <td colSpan={4}>
+                        <CommentDisplay
+                          comment={c}
+                          onEdit={onEditComment}
+                          onDelete={onDeleteComment}
+                        />
+                      </td>
+                    </tr>
+                  )),
               ];
             })}
           </tbody>
@@ -225,9 +239,11 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
           language={language}
           activeComment={activeComment}
           selectedLineIds={selectedLineIds}
+          fileComments={fileComments}
           onLineClick={handleLineClick}
           onSaveComment={handleSaveComment}
           onCancelComment={handleCancelComment}
+          onDeleteComment={onDeleteComment}
         />
       ))}
     </div>

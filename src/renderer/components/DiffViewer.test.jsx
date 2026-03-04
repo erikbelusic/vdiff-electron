@@ -100,3 +100,41 @@ test('clicking a diff line opens comment textarea', async () => {
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 });
+
+test('saving a comment displays it below the line', async () => {
+  const onAddComment = vi.fn();
+  const { rerender } = render(
+    <DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} onAddComment={onAddComment} />
+  );
+
+  // Click a line to open comment input
+  const line = await screen.findByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 3;',
+  );
+  await userEvent.click(line.closest('tr'));
+
+  // Type and save
+  const textarea = screen.getByPlaceholderText('Add a comment...');
+  await userEvent.type(textarea, 'Fix this variable');
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+  expect(onAddComment).toHaveBeenCalledWith(
+    expect.objectContaining({ text: 'Fix this variable' }),
+  );
+
+  // Re-render with the saved comment in props
+  const savedComment = {
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-2'],  // hunk 0, line index 2 (the addition line)
+    lineNum: '2',
+    code: 'const b = 3;',
+    text: 'Fix this variable',
+  };
+  rerender(
+    <DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} comments={[savedComment]} />
+  );
+
+  expect(screen.getByText('Fix this variable')).toBeInTheDocument();
+  expect(screen.getByText('Line 2')).toBeInTheDocument();
+});

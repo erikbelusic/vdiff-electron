@@ -1,0 +1,35 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 16px;
+  background-color: #1f6feb;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.link {
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.link:hover {
+  opacity: 0.9;
+}
+
+.dismiss {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+.dismiss:hover {
+  opacity: 1;
+}

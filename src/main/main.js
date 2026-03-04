@@ -1,8 +1,11 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, net } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened } from './store.js';
 import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff } from './git.js';
+
+const GITHUB_OWNER = 'erikbelusic';
+const GITHUB_REPO = 'vdiff-electron';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -70,3 +73,33 @@ ipcMain.handle('repo:setLastOpened', (_event, repoPath) => setLastOpened(repoPat
 ipcMain.handle('git:getCurrentBranch', (_event, repoPath) => getCurrentBranch(repoPath));
 ipcMain.handle('git:getChangedFiles', (_event, repoPath) => getChangedFiles(repoPath));
 ipcMain.handle('git:getFileDiff', (_event, repoPath, filePath) => getFileDiff(repoPath, filePath));
+
+// Update check
+ipcMain.handle('app:checkForUpdate', async () => {
+  const currentVersion = app.getVersion();
+  try {
+    const response = await net.fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`,
+      { headers: { 'User-Agent': 'vdiff-electron' } }
+    );
+    if (!response.ok) return null;
+    const release = await response.json();
+    const latestVersion = release.tag_name.replace(/^v/, '');
+    if (compareVersions(latestVersion, currentVersion) > 0) {
+      return { version: latestVersion, url: release.html_url };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+});
+
+function compareVersions(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const diff = (pa[i] || 0) - (pb[i] || 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}

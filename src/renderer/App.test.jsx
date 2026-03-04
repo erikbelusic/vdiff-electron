@@ -12,6 +12,7 @@ beforeEach(() => {
     getCurrentBranch: async () => 'main',
     getChangedFiles: async () => [],
     getFileDiff: async () => '',
+    checkForUpdate: async () => null,
   };
 });
 

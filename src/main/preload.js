@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getCurrentBranch: (repoPath) => ipcRenderer.invoke('git:getCurrentBranch', repoPath),
   getChangedFiles: (repoPath) => ipcRenderer.invoke('git:getChangedFiles', repoPath),
   getFileDiff: (repoPath, filePath) => ipcRenderer.invoke('git:getFileDiff', repoPath, filePath),
+  checkForUpdate: () => ipcRenderer.invoke('app:checkForUpdate'),
 });

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import UpdateBanner from './components/UpdateBanner';
 import WelcomeScreen from './components/WelcomeScreen';
 import TopBar from './components/TopBar';
 import FileList from './components/FileList';
@@ -82,12 +83,16 @@ function App() {
 
   if (!selectedRepo) {
     return (
-      <WelcomeScreen onAddRepository={handleAddRepository} error={error} />
+      <>
+        <UpdateBanner />
+        <WelcomeScreen onAddRepository={handleAddRepository} error={error} />
+      </>
     );
   }
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <UpdateBanner />
       <TopBar
         repositories={repositories}
         selectedRepo={selectedRepo}

@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { test, expect, vi } from 'vitest';
+import { test, expect, vi, beforeEach } from 'vitest';
 import PromptPanel from './PromptPanel';
+
+beforeEach(() => {
+  Object.assign(navigator, {
+    clipboard: { writeText: vi.fn(() => Promise.resolve()) },
+  });
+});
 
 test('shows placeholder when no comments exist', () => {
   render(<PromptPanel comments={[]} onClose={vi.fn()} />);
@@ -27,4 +33,28 @@ test('close button calls onClose', async () => {
   render(<PromptPanel comments={[]} onClose={onClose} />);
   await userEvent.click(screen.getByRole('button', { name: 'Close' }));
   expect(onClose).toHaveBeenCalled();
+});
+
+test('copy button copies export text and shows toast', async () => {
+  const comments = [{
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-1'],
+    lineNum: '5',
+    code: 'const x = 1;',
+    text: 'Rename this',
+  }];
+  render(<PromptPanel comments={comments} onClose={vi.fn()} />);
+
+  await userEvent.click(screen.getByRole('button', { name: 'Copy to Clipboard' }));
+
+  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+    expect.stringContaining('Code Review Comments:'),
+  );
+  expect(screen.getByText('Copied to clipboard!')).toBeInTheDocument();
+});
+
+test('copy button is hidden when no comments exist', () => {
+  render(<PromptPanel comments={[]} onClose={vi.fn()} />);
+  expect(screen.queryByRole('button', { name: 'Copy to Clipboard' })).not.toBeInTheDocument();
 });

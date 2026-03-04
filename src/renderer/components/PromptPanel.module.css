@@ -40,6 +40,16 @@
   font-family: inherit;
 }
 
+.copyBtn {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #1f6feb;
+}
+
+.copyBtn:hover {
+  background: #388bfd;
+}
+
 .closeBtn {
   background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
@@ -68,4 +78,16 @@
 .noComments {
   color: var(--color-text-secondary);
   font-style: italic;
+}
+
+.toast {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 1rem;
+  padding: 0.4rem 0.8rem;
+  background: #238636;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: inherit;
 }

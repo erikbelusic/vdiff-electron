@@ -1,8 +1,8 @@
-function generateExport(comments, { brief = false } = {}) {
+function generateExport(comments, { compact = false } = {}) {
   if (comments.length === 0) return '';
 
-  if (brief) {
-    let out = '';
+  if (compact) {
+    let out = 'Address the following feedback:\n\n';
     comments.forEach((c) => {
       const lineLabel = c.lineNum || '?';
       out += '- ' + c.filePath + ':' + lineLabel + '\n';
@@ -13,7 +13,7 @@ function generateExport(comments, { brief = false } = {}) {
     return out.trimEnd() + '\n';
   }
 
-  let out = 'Code Review Comments:\n\n';
+  let out = 'Address the following feedback:\n\n';
 
   comments.forEach((c) => {
     const lineLabel = c.lineNum || '?';

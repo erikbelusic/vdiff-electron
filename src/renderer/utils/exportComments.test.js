@@ -16,7 +16,7 @@ test('formats single-line code comment', () => {
   }];
 
   expect(generateExport(comments)).toBe(
-    'Code Review Comments:\n' +
+    'Address the following feedback:\n' +
     '\n' +
     '- src/app.js:5\n' +
     '   Code: const x = 1;\n' +
@@ -35,7 +35,7 @@ test('formats multi-line code comment', () => {
   }];
 
   expect(generateExport(comments)).toBe(
-    'Code Review Comments:\n' +
+    'Address the following feedback:\n' +
     '\n' +
     '- src/utils.js:10-12\n' +
     '   Code:\n' +
@@ -67,7 +67,7 @@ test('formats multiple comments with blank line between them', () => {
   ];
 
   expect(generateExport(comments)).toBe(
-    'Code Review Comments:\n' +
+    'Address the following feedback:\n' +
     '\n' +
     '- a.js:1\n' +
     '   Code: let a = 1;\n' +
@@ -90,7 +90,7 @@ test('formats multi-line comment text', () => {
   }];
 
   expect(generateExport(comments)).toBe(
-    'Code Review Comments:\n' +
+    'Address the following feedback:\n' +
     '\n' +
     '- src/app.js:5\n' +
     '   Code: const x = 1;\n' +
@@ -100,7 +100,7 @@ test('formats multi-line comment text', () => {
   );
 });
 
-test('brief mode omits code and header', () => {
+test('compact mode omits code', () => {
   const comments = [
     {
       id: 1,
@@ -120,7 +120,9 @@ test('brief mode omits code and header', () => {
     },
   ];
 
-  expect(generateExport(comments, { brief: true })).toBe(
+  expect(generateExport(comments, { compact: true })).toBe(
+    'Address the following feedback:\n' +
+    '\n' +
     '- src/app.js:5\n' +
     '  - Rename this variable\n' +
     '- src/utils.js:10\n' +
@@ -128,7 +130,7 @@ test('brief mode omits code and header', () => {
   );
 });
 
-test('brief mode handles multiline comment text', () => {
+test('compact mode handles multiline comment text', () => {
   const comments = [{
     id: 1,
     filePath: 'src/app.js',
@@ -138,7 +140,9 @@ test('brief mode handles multiline comment text', () => {
     text: 'First line\nSecond line',
   }];
 
-  expect(generateExport(comments, { brief: true })).toBe(
+  expect(generateExport(comments, { compact: true })).toBe(
+    'Address the following feedback:\n' +
+    '\n' +
     '- src/app.js:5\n' +
     '  - First line\n' +
     '  - Second line\n'

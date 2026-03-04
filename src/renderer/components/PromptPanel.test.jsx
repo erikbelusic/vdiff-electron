@@ -24,7 +24,7 @@ test('shows formatted export text when comments exist', () => {
     text: 'Rename this',
   }];
   render(<PromptPanel comments={comments} onClose={vi.fn()} />);
-  expect(screen.getByText(/Code Review Comments:/)).toBeInTheDocument();
+  expect(screen.getByText(/Address the following feedback:/)).toBeInTheDocument();
   expect(screen.getByText(/src\/app.js:5/)).toBeInTheDocument();
 });
 
@@ -49,7 +49,7 @@ test('copy button copies export text and shows toast', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Copy to Clipboard' }));
 
   expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-    expect.stringContaining('Code Review Comments:'),
+    expect.stringContaining('Address the following feedback:'),
   );
   expect(screen.getByText('Copied to clipboard!')).toBeInTheDocument();
 });

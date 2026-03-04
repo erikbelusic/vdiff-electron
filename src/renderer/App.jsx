@@ -16,7 +16,7 @@ function App() {
   const [error, setError] = useState(null);
   const { comments, addComment, updateComment, deleteComment, clearAll } = useComments();
   const [promptPanelOpen, setPromptPanelOpen] = useState(false);
-  const [briefOutput, setBriefOutput] = useState(false);
+  const [compactOutput, setBriefOutput] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -106,8 +106,8 @@ function App() {
         commentCount={comments.length}
         onTogglePromptPanel={() => setPromptPanelOpen((v) => !v)}
         promptPanelOpen={promptPanelOpen}
-        briefOutput={briefOutput}
-        onToggleBriefOutput={() => setBriefOutput((v) => !v)}
+        compactOutput={compactOutput}
+        onToggleCompactOutput={() => setBriefOutput((v) => !v)}
         onClearComments={clearAll}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
@@ -129,7 +129,7 @@ function App() {
       {promptPanelOpen && (
         <PromptPanel
           comments={comments}
-          brief={briefOutput}
+          compact={compactOutput}
           onClose={() => setPromptPanelOpen(false)}
         />
       )}

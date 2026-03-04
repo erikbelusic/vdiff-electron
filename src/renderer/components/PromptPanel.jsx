@@ -2,8 +2,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { generateExport } from '../utils/exportComments';
 import styles from './PromptPanel.module.css';
 
-function PromptPanel({ comments, brief, onClose }) {
-  const exportText = useMemo(() => generateExport(comments, { brief }), [comments, brief]);
+function PromptPanel({ comments, compact, onClose }) {
+  const exportText = useMemo(() => generateExport(comments, { compact }), [comments, compact]);
   const [showToast, setShowToast] = useState(false);
 
   const handleCopy = useCallback(() => {

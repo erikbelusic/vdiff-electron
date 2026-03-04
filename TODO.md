@@ -58,7 +58,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Visual indicators on commented lines (purple border like vdiff)
 - [x] Edit existing comments by clicking them
 - [x] Delete comments (x button)
-- [ ] Comment count badge in toolbar
+- [x] Comment count badge in toolbar
 - [ ] Keyboard shortcuts: Cmd/Ctrl+Enter to save, Escape to cancel
 
 ### 6. Export to Clipboard

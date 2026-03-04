@@ -93,6 +93,7 @@ function App() {
         onAddRepository={handleAddRepository}
         onRemoveRepository={handleRemoveRepository}
         currentBranch={currentBranch}
+        commentCount={comments.length}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <FileList

@@ -118,6 +118,10 @@
   border-left: 3px solid #8957e5;
 }
 
+.commentRow {
+  border-left: 3px solid #8957e5;
+}
+
 .commentRow td {
   padding: 0;
 }

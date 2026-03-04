@@ -3,7 +3,6 @@
   background: var(--color-bg-tertiary);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
-  border-left: 3px solid #8957e5;
 }
 
 .header {

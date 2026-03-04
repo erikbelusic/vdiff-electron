@@ -114,7 +114,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
   );
 }
 
-function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateComment, onDeleteComment }) {
+function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, onUpdateComment, onDeleteComment }) {
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeComment, setActiveComment] = useState(null);
@@ -141,7 +141,7 @@ function DiffViewer({ repoPath, filePath, comments, onAddComment, onUpdateCommen
       setLoading(false);
     }
     loadDiff();
-  }, [repoPath, filePath]);
+  }, [repoPath, filePath, refreshKey]);
 
   // Clear active comment when file changes
   useEffect(() => {

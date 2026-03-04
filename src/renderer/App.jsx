@@ -16,6 +16,7 @@ function App() {
   const [error, setError] = useState(null);
   const { comments, addComment, updateComment, deleteComment, clearAll } = useComments();
   const [promptPanelOpen, setPromptPanelOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function loadRepos() {
@@ -49,6 +50,7 @@ function App() {
   useEffect(() => {
     function handleFocus() {
       refreshRepoState(selectedRepo);
+      setRefreshKey((k) => k + 1);
     }
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
@@ -114,6 +116,7 @@ function App() {
         <DiffViewer
           repoPath={selectedRepo}
           filePath={selectedFile}
+          refreshKey={refreshKey}
           comments={comments}
           onAddComment={addComment}
           onUpdateComment={updateComment}

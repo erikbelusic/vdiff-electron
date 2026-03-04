@@ -79,6 +79,27 @@ test('formats multiple comments with blank line between them', () => {
   );
 });
 
+test('formats multi-line comment text', () => {
+  const comments = [{
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-1'],
+    lineNum: '5',
+    code: 'const x = 1;',
+    text: 'This should be renamed.\nAlso consider using a constant.',
+  }];
+
+  expect(generateExport(comments)).toBe(
+    'Code Review Comments:\n' +
+    '\n' +
+    '- src/app.js:5\n' +
+    '   Code: const x = 1;\n' +
+    '   Comment:\n' +
+    '     This should be renamed.\n' +
+    '     Also consider using a constant.\n'
+  );
+});
+
 test('uses ? for missing lineNum', () => {
   const comments = [{
     id: 1,

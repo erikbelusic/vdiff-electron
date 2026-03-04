@@ -17,7 +17,16 @@ function generateExport(comments) {
       });
     }
 
-    out += '   Comment: ' + c.text + '\n\n';
+    const commentLines = c.text.split('\n');
+    if (commentLines.length === 1) {
+      out += '   Comment: ' + c.text + '\n\n';
+    } else {
+      out += '   Comment:\n';
+      commentLines.forEach((cl) => {
+        out += '     ' + cl + '\n';
+      });
+      out += '\n';
+    }
   });
 
   return out.trimEnd() + '\n';

@@ -64,7 +64,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 ### 6. Export to Clipboard
 - [ ] Bottom area: comment export panel (collapsible, like vdiff's prompt output panel)
 - [ ] "Prompt Output" panel showing all comments in LLM-friendly format
-- [ ] Same export format as vdiff CLI:
+- [x] Same export format as vdiff CLI:
   ```
   Code Review Comments:
   - file:line

@@ -23,6 +23,15 @@ function CommentInput({ initialText = '', onSave, onCancel }) {
         className={styles.textarea}
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            handleSave();
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            onCancel();
+          }
+        }}
         placeholder="Add a comment..."
         rows={3}
       />

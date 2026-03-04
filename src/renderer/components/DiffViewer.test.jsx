@@ -221,3 +221,39 @@ test('clicking delete removes comment', async () => {
 
   expect(onDeleteComment).toHaveBeenCalledWith(1);
 });
+
+test('Cmd+Enter saves comment', async () => {
+  const onAddComment = vi.fn();
+  render(
+    <DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} onAddComment={onAddComment} />
+  );
+
+  const line = await screen.findByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 3;',
+  );
+  await userEvent.click(line.closest('tr'));
+
+  const textarea = screen.getByPlaceholderText('Add a comment...');
+  await userEvent.type(textarea, 'Keyboard save');
+  // Simulate Cmd+Enter
+  await userEvent.type(textarea, '{Meta>}{Enter}{/Meta}');
+
+  expect(onAddComment).toHaveBeenCalledWith(
+    expect.objectContaining({ text: 'Keyboard save' }),
+  );
+});
+
+test('Escape cancels comment input', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+
+  const line = await screen.findByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 3;',
+  );
+  await userEvent.click(line.closest('tr'));
+
+  expect(screen.getByPlaceholderText('Add a comment...')).toBeInTheDocument();
+
+  await userEvent.keyboard('{Escape}');
+
+  expect(screen.queryByPlaceholderText('Add a comment...')).not.toBeInTheDocument();
+});

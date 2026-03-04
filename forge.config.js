@@ -73,6 +73,18 @@ module.exports = {
       return makeResults;
     },
   },
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'erikbelusic',
+          name: 'vdiff-electron',
+        },
+        draft: true,
+      },
+    },
+  ],
   plugins: [
     {
       name: '@electron-forge/plugin-vite',

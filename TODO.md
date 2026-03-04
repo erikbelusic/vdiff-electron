@@ -74,6 +74,12 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] "Copy to Clipboard" button with toast confirmation
 - [x] Panel is collapsible/toggleable
 
+### 7. Productionization & Distribution
+- [x] App icon (.icns for macOS) in `assets/`, configured in forge.config.js
+- [x] Configure DMG maker for macOS (hdiutil postMake hook)
+- [x] Configure GitHub publisher (@electron-forge/publisher-github)
+- [x] Update check notification — banner on launch if newer version exists on GitHub
+
 ---
 
 ## Future Enhancements

@@ -25,7 +25,8 @@ This launches the Electron app with Vite hot-reload. Edit any file in `src/rende
 | `npm test` | Run tests once |
 | `npm run test:watch` | Run tests in watch mode (re-runs on file changes) |
 | `npm run package` | Package the app for your current platform (output in `out/`) |
-| `npm run make` | Build distributable installers (future — not fully configured yet) |
+| `npm run make` | Build distributable installers (`.zip`, `.dmg`, `.deb`, `.rpm`) |
+| `npm run publish` | Build and create a draft GitHub release |
 
 ## Project Structure
 
@@ -70,3 +71,37 @@ npm run test:watch
 Test files are co-located with source files: `App.jsx` → `App.test.jsx`.
 
 Tests focus on **behavior** (what the user sees and interacts with), not implementation details. A rename refactor should never break tests.
+
+## Building & Publishing
+
+### Package (app directory, no installer)
+
+```bash
+npm run package
+```
+
+Output: `out/vdiff-<platform>-<arch>/`
+
+### Make (platform installers)
+
+```bash
+npm run make
+```
+
+Creates distributable installers in `out/make/`:
+
+| Platform | Formats |
+|----------|---------|
+| macOS | `.zip` + `.dmg` |
+| Windows | Squirrel installer |
+| Linux | `.deb`, `.rpm` |
+
+### Publish (GitHub release)
+
+```bash
+GITHUB_TOKEN=your_token npm run publish
+```
+
+Builds the app and creates a **draft** GitHub release with all artifacts attached. Requires a `GITHUB_TOKEN` with repo access. Review and publish the draft at https://github.com/erikbelusic/vdiff-electron/releases.
+
+Bump the version in `package.json` before publishing a new release.

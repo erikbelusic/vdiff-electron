@@ -15,6 +15,12 @@ function escapeHtml(str) {
 function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileComments, onLineClick, onSaveComment, onCancelComment, onEditComment, onDeleteComment }) {
   const [collapsed, setCollapsed] = useState(false);
 
+  const commentedLineIds = useMemo(() => {
+    const ids = new Set();
+    (fileComments || []).forEach((c) => c.lineIds.forEach((id) => ids.add(id)));
+    return ids;
+  }, [fileComments]);
+
   return (
     <div className={styles.hunk}>
       <button
@@ -32,11 +38,13 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
               const lineId = `${hunkIdx}-${lineIdx}`;
               const isActive = activeComment && activeComment.lineIds.includes(lineId);
               const isSelected = selectedLineIds && selectedLineIds.has(lineId);
+              const isCommented = commentedLineIds.has(lineId);
 
               const rowClasses = [
                 styles.lineRow,
                 styles[line.type],
                 isSelected ? styles.selected : '',
+                isCommented ? styles.commented : '',
               ].filter(Boolean).join(' ');
 
               return [

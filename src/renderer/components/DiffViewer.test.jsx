@@ -101,6 +101,27 @@ test('clicking a diff line opens comment textarea', async () => {
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
 });
 
+test('commented lines have visual indicator', async () => {
+  const savedComment = {
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-2'],
+    lineNum: '2',
+    code: 'const b = 3;',
+    text: 'Fix this',
+  };
+  render(
+    <DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} comments={[savedComment]} />
+  );
+
+  const line = await screen.findByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const b = 3;',
+  );
+  const row = line.closest('tr');
+  // The row should have the commented class which applies a purple left border
+  expect(row.className).toMatch(/commented/);
+});
+
 test('saving a comment displays it below the line', async () => {
   const onAddComment = vi.fn();
   const { rerender } = render(

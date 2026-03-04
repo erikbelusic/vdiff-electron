@@ -114,6 +114,10 @@
   background: rgba(56, 139, 253, 0.2) !important;
 }
 
+.commented {
+  border-left: 3px solid #8957e5;
+}
+
 .commentRow td {
   padding: 0;
 }

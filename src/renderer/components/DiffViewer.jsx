@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { parseDiff } from '../utils/parseDiff';
 import { getLanguage, highlightLine } from '../utils/highlight';
 import CommentInput from './CommentInput';
@@ -12,7 +12,7 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileComments, onLineClick, onSaveComment, onCancelComment, onEditComment, onDeleteComment }) {
+function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileComments, onLineMouseDown, onLineMouseEnter, onSaveComment, onCancelComment, onEditComment, onDeleteComment }) {
   const [collapsed, setCollapsed] = useState(false);
 
   const commentedLineIds = useMemo(() => {
@@ -51,8 +51,9 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
                 <tr
                   key={lineIdx}
                   className={rowClasses}
-                  onClick={(e) => onLineClick(hunkIdx, lineIdx, line, e)}
-                  style={{ cursor: 'pointer' }}
+                  onMouseDown={(e) => { e.preventDefault(); onLineMouseDown(hunkIdx, lineIdx, line, e); }}
+                  onMouseEnter={() => onLineMouseEnter(hunkIdx, lineIdx, line)}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
                 >
                   <td className={styles.lineNum}>
                     {line.oldNum ?? ''}
@@ -118,9 +119,9 @@ function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, on
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeComment, setActiveComment] = useState(null);
-  const [selectionAnchor, setSelectionAnchor] = useState(null);
   const [selectedLineIds, setSelectedLineIds] = useState(new Set());
   const language = useMemo(() => filePath ? getLanguage(filePath) : null, [filePath]);
+  const dragRef = useRef(null); // { hunkIdx, anchorIdx, currentIdx }
 
   const fileComments = useMemo(
     () => (comments || []).filter((c) => c.filePath === filePath),
@@ -146,61 +147,87 @@ function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, on
   // Clear active comment when file changes
   useEffect(() => {
     setActiveComment(null);
-    setSelectionAnchor(null);
+    dragRef.current = null;
     setSelectedLineIds(new Set());
   }, [filePath]);
 
   const buildLineId = (hIdx, lIdx) => `${hIdx}-${lIdx}`;
 
-  const handleLineClick = (hunkIdx, lineIdx, line, event) => {
-    if (event.shiftKey && selectionAnchor && selectionAnchor.hunkIdx === hunkIdx) {
-      // Shift+click: select range within same hunk
-      const startIdx = Math.min(selectionAnchor.lineIdx, lineIdx);
-      const endIdx = Math.max(selectionAnchor.lineIdx, lineIdx);
-      const hunk = hunks[hunkIdx];
+  const buildSelectionRange = useCallback((hunkIdx, startIdx, endIdx) => {
+    const hunk = hunks[hunkIdx];
+    const lo = Math.min(startIdx, endIdx);
+    const hi = Math.max(startIdx, endIdx);
 
-      const lineIds = [];
-      const codeLines = [];
-      let firstNum = null;
-      let lastNum = null;
+    const lineIds = [];
+    const codeLines = [];
+    let firstNum = null;
+    let lastNum = null;
 
-      for (let i = startIdx; i <= endIdx; i++) {
-        lineIds.push(buildLineId(hunkIdx, i));
-        codeLines.push(hunk.lines[i].content);
-        const num = hunk.lines[i].newNum ?? hunk.lines[i].oldNum;
-        if (num != null) {
-          if (firstNum === null) firstNum = num;
-          lastNum = num;
-        }
+    for (let i = lo; i <= hi; i++) {
+      lineIds.push(buildLineId(hunkIdx, i));
+      codeLines.push(hunk.lines[i].content);
+      const num = hunk.lines[i].newNum ?? hunk.lines[i].oldNum;
+      if (num != null) {
+        if (firstNum === null) firstNum = num;
+        lastNum = num;
       }
-
-      const lineNum = firstNum === lastNum ? String(firstNum) : `${firstNum}-${lastNum}`;
-
-      setSelectedLineIds(new Set(lineIds));
-      setActiveComment({
-        lineIds,
-        lineNum,
-        code: codeLines.join('\n'),
-        type: line.type,
-      });
-    } else {
-      // Normal click: single line
-      const lineId = buildLineId(hunkIdx, lineIdx);
-      const lineNum = line.newNum ?? line.oldNum ?? '';
-      setSelectionAnchor({ hunkIdx, lineIdx });
-      setSelectedLineIds(new Set([lineId]));
-      setActiveComment({
-        lineIds: [lineId],
-        lineNum: String(lineNum),
-        code: line.content,
-        type: line.type,
-      });
     }
-  };
+
+    const lineNum = firstNum === lastNum ? String(firstNum) : `${firstNum}-${lastNum}`;
+    return { lineIds, lineNum, code: codeLines.join('\n'), type: hunk.lines[hi].type };
+  }, [hunks]);
+
+  const lastAnchorRef = useRef(null);
+
+  const handleLineMouseDown = useCallback((hunkIdx, lineIdx, _line, event) => {
+    if (event && event.shiftKey && lastAnchorRef.current && lastAnchorRef.current.hunkIdx === hunkIdx) {
+      // Shift+click: immediately select range from last anchor, no drag
+      const sel = buildSelectionRange(hunkIdx, lastAnchorRef.current.lineIdx, lineIdx);
+      setSelectedLineIds(new Set(sel.lineIds));
+      setActiveComment(sel);
+      dragRef.current = null;
+      return;
+    }
+
+    lastAnchorRef.current = { hunkIdx, lineIdx };
+    dragRef.current = { hunkIdx, anchorIdx: lineIdx, currentIdx: lineIdx };
+    const lineId = buildLineId(hunkIdx, lineIdx);
+    setSelectedLineIds(new Set([lineId]));
+    setActiveComment(null);
+  }, [buildSelectionRange]);
+
+  const handleLineMouseEnter = useCallback((hunkIdx, lineIdx) => {
+    const drag = dragRef.current;
+    if (!drag || drag.hunkIdx !== hunkIdx) return;
+    drag.currentIdx = lineIdx;
+
+    const lo = Math.min(drag.anchorIdx, lineIdx);
+    const hi = Math.max(drag.anchorIdx, lineIdx);
+    const ids = new Set();
+    for (let i = lo; i <= hi; i++) {
+      ids.add(buildLineId(hunkIdx, i));
+    }
+    setSelectedLineIds(ids);
+  }, []);
+
+  // Finalize selection on mouseup
+  useEffect(() => {
+    function handleMouseUp() {
+      const drag = dragRef.current;
+      if (!drag) return;
+      dragRef.current = null;
+
+      const { hunkIdx, anchorIdx, currentIdx } = drag;
+      const sel = buildSelectionRange(hunkIdx, anchorIdx, currentIdx);
+      setActiveComment(sel);
+    }
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => window.removeEventListener('mouseup', handleMouseUp);
+  }, [buildSelectionRange]);
 
   const clearSelection = () => {
     setActiveComment(null);
-    setSelectionAnchor(null);
+    dragRef.current = null;
     setSelectedLineIds(new Set());
   };
 
@@ -266,7 +293,8 @@ function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, on
           activeComment={activeComment}
           selectedLineIds={selectedLineIds}
           fileComments={fileComments}
-          onLineClick={handleLineClick}
+          onLineMouseDown={handleLineMouseDown}
+          onLineMouseEnter={handleLineMouseEnter}
           onSaveComment={handleSaveComment}
           onCancelComment={handleCancelComment}
           onEditComment={handleEditComment}

@@ -72,7 +72,7 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
      Comment: ...
   ```
 - [x] "Copy to Clipboard" button with toast confirmation
-- [ ] Panel is collapsible/toggleable
+- [x] Panel is collapsible/toggleable
 
 ---
 

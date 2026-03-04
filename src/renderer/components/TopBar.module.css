@@ -29,6 +29,13 @@
   font-size: 0.9rem;
 }
 
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
 .commentBadge {
   display: flex;
   align-items: center;
@@ -39,5 +46,25 @@
   font-size: 0.8rem;
   color: #8957e5;
   font-weight: 600;
-  margin-left: auto;
+}
+
+.promptBtn {
+  padding: 0.3rem 0.6rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.promptBtn:hover {
+  background: var(--color-border);
+}
+
+.promptBtnActive {
+  background: rgba(31, 111, 235, 0.2);
+  border-color: #1f6feb;
+  color: #388bfd;
 }

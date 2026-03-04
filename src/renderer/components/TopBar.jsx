@@ -1,7 +1,7 @@
 import RepositoryPicker from './RepositoryPicker';
 import styles from './TopBar.module.css';
 
-function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount }) {
+function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen }) {
   return (
     <div className={styles.topBar}>
       <RepositoryPicker
@@ -18,8 +18,16 @@ function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onR
         </div>
       )}
       {commentCount > 0 && (
-        <div className={styles.commentBadge}>
-          {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+        <div className={styles.rightSection}>
+          <div className={styles.commentBadge}>
+            {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+          </div>
+          <button
+            className={`${styles.promptBtn} ${promptPanelOpen ? styles.promptBtnActive : ''}`}
+            onClick={onTogglePromptPanel}
+          >
+            Prompt Output
+          </button>
         </div>
       )}
     </div>

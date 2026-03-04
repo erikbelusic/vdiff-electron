@@ -1,6 +1,14 @@
 import { renderHook, act } from '@testing-library/react';
-import { test, expect } from 'vitest';
+import { test, expect, beforeEach } from 'vitest';
 import useComments from './useComments';
+
+beforeEach(() => {
+  window.electronAPI = {
+    ...window.electronAPI,
+    loadComments: async () => [],
+    saveComments: async () => {},
+  };
+});
 
 test('starts with empty comments', () => {
   const { result } = renderHook(() => useComments());
@@ -8,7 +16,7 @@ test('starts with empty comments', () => {
 });
 
 test('addComment adds a comment with auto-generated id', () => {
-  const { result } = renderHook(() => useComments());
+  const { result } = renderHook(() => useComments('/repo'));
   act(() => {
     result.current.addComment({
       filePath: 'src/app.js',
@@ -30,7 +38,7 @@ test('addComment adds a comment with auto-generated id', () => {
 });
 
 test('updateComment updates the text of a comment', () => {
-  const { result } = renderHook(() => useComments());
+  const { result } = renderHook(() => useComments('/repo'));
   let id;
   act(() => {
     id = result.current.addComment({
@@ -48,7 +56,7 @@ test('updateComment updates the text of a comment', () => {
 });
 
 test('deleteComment removes a comment', () => {
-  const { result } = renderHook(() => useComments());
+  const { result } = renderHook(() => useComments('/repo'));
   let id;
   act(() => {
     id = result.current.addComment({
@@ -66,7 +74,7 @@ test('deleteComment removes a comment', () => {
 });
 
 test('getCommentsForFile filters by file path', () => {
-  const { result } = renderHook(() => useComments());
+  const { result } = renderHook(() => useComments('/repo'));
   act(() => {
     result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Comment A' });
     result.current.addComment({ filePath: 'b.js', lineIds: ['0-0'], lineNum: '1', code: 'b', text: 'Comment B' });
@@ -75,4 +83,41 @@ test('getCommentsForFile filters by file path', () => {
   const aComments = result.current.getCommentsForFile('a.js');
   expect(aComments).toHaveLength(2);
   expect(aComments.every((c) => c.filePath === 'a.js')).toBe(true);
+});
+
+test('pruneForFiles removes comments for files not in the list', () => {
+  const { result } = renderHook(() => useComments('/repo'));
+  act(() => {
+    result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Comment A' });
+    result.current.addComment({ filePath: 'b.js', lineIds: ['0-0'], lineNum: '1', code: 'b', text: 'Comment B' });
+    result.current.addComment({ filePath: 'c.js', lineIds: ['0-0'], lineNum: '1', code: 'c', text: 'Comment C' });
+  });
+  act(() => {
+    result.current.pruneForFiles(['a.js', 'c.js']);
+  });
+  expect(result.current.comments).toHaveLength(2);
+  expect(result.current.comments.map((c) => c.filePath)).toEqual(['a.js', 'c.js']);
+});
+
+test('loadFromDisk loads persisted comments', async () => {
+  const saved = [
+    { id: 10, filePath: 'x.js', lineIds: ['0-0'], lineNum: '1', code: 'x', text: 'Persisted' },
+  ];
+  window.electronAPI.loadComments = async () => saved;
+  const { result } = renderHook(() => useComments('/repo'));
+  await act(async () => {
+    await result.current.loadFromDisk('/repo');
+  });
+  expect(result.current.comments).toEqual(saved);
+});
+
+test('mutations call saveComments', () => {
+  let savedData;
+  window.electronAPI.saveComments = async (_repo, comments) => { savedData = comments; };
+  const { result } = renderHook(() => useComments('/repo'));
+  act(() => {
+    result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Hi' });
+  });
+  expect(savedData).toHaveLength(1);
+  expect(savedData[0].text).toBe('Hi');
 });

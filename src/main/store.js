@@ -50,3 +50,13 @@ export function setLastOpened(repoPath) {
   store.lastOpened = repoPath;
   writeStore(store);
 }
+
+export function getCompactOutput() {
+  return readStore().compactOutput || false;
+}
+
+export function setCompactOutput(value) {
+  const store = readStore();
+  store.compactOutput = value;
+  writeStore(store);
+}

@@ -1,7 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, net } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened } from './store.js';
+import { getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened, getCompactOutput, setCompactOutput } from './store.js';
+import { getComments, saveComments } from './commentsStore.js';
 import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff } from './git.js';
 
 const GITHUB_OWNER = 'erikbelusic';
@@ -68,6 +69,12 @@ ipcMain.handle('repo:getAll', () => getRepositories());
 ipcMain.handle('repo:remove', (_event, repoPath) => removeRepository(repoPath));
 ipcMain.handle('repo:getLastOpened', () => getLastOpened());
 ipcMain.handle('repo:setLastOpened', (_event, repoPath) => setLastOpened(repoPath));
+ipcMain.handle('repo:getCompactOutput', () => getCompactOutput());
+ipcMain.handle('repo:setCompactOutput', (_event, value) => setCompactOutput(value));
+
+// Comments persistence
+ipcMain.handle('comments:load', (_event, repoPath) => getComments(repoPath));
+ipcMain.handle('comments:save', (_event, repoPath, comments) => saveComments(repoPath, comments));
 
 // Git operations
 ipcMain.handle('git:getCurrentBranch', (_event, repoPath) => getCurrentBranch(repoPath));

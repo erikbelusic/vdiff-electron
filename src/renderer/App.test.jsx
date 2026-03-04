@@ -9,9 +9,13 @@ beforeEach(() => {
     selectFolder: async () => ({ path: null }),
     removeRepository: async () => [],
     setLastOpened: async () => {},
+    getCompactOutput: async () => false,
+    setCompactOutput: async () => {},
     getCurrentBranch: async () => 'main',
     getChangedFiles: async () => [],
     getFileDiff: async () => '',
+    loadComments: async () => [],
+    saveComments: async () => {},
     checkForUpdate: async () => null,
   };
 });

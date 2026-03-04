@@ -14,7 +14,7 @@ function App() {
   const [changedFiles, setChangedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
-  const { comments, addComment, updateComment, deleteComment, clearAll } = useComments();
+  const { comments, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo);
   const [promptPanelOpen, setPromptPanelOpen] = useState(false);
   const [compactOutput, setBriefOutput] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -27,6 +27,8 @@ function App() {
       if (lastOpened && repos.includes(lastOpened)) {
         setSelectedRepo(lastOpened);
       }
+      const compact = await window.electronAPI.getCompactOutput();
+      setBriefOutput(compact);
     }
     loadRepos();
   }, []);
@@ -35,27 +37,39 @@ function App() {
     if (!repoPath) {
       setCurrentBranch(null);
       setChangedFiles([]);
-      return;
+      return [];
     }
     const branch = await window.electronAPI.getCurrentBranch(repoPath);
     setCurrentBranch(branch);
     const files = await window.electronAPI.getChangedFiles(repoPath);
     setChangedFiles(files);
+    return files;
   }, []);
 
   useEffect(() => {
-    refreshRepoState(selectedRepo);
-  }, [selectedRepo, refreshRepoState]);
+    async function init() {
+      const files = await refreshRepoState(selectedRepo);
+      const loaded = await loadFromDisk(selectedRepo);
+      if (loaded.length > 0 && files.length > 0) {
+        const filePaths = files.map((f) => f.path);
+        pruneForFiles(filePaths);
+      }
+    }
+    init();
+  }, [selectedRepo, refreshRepoState, loadFromDisk, pruneForFiles]);
 
   // Refresh file list and branch when window regains focus
   useEffect(() => {
-    function handleFocus() {
-      refreshRepoState(selectedRepo);
+    async function handleFocus() {
+      const files = await refreshRepoState(selectedRepo);
+      if (files.length > 0) {
+        pruneForFiles(files.map((f) => f.path));
+      }
       setRefreshKey((k) => k + 1);
     }
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [selectedRepo, refreshRepoState]);
+  }, [selectedRepo, refreshRepoState, pruneForFiles]);
 
   const handleAddRepository = async () => {
     setError(null);
@@ -107,7 +121,13 @@ function App() {
         onTogglePromptPanel={() => setPromptPanelOpen((v) => !v)}
         promptPanelOpen={promptPanelOpen}
         compactOutput={compactOutput}
-        onToggleCompactOutput={() => setBriefOutput((v) => !v)}
+        onToggleCompactOutput={() => {
+          setBriefOutput((v) => {
+            const next = !v;
+            window.electronAPI.setCompactOutput(next);
+            return next;
+          });
+        }}
         onClearComments={clearAll}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>

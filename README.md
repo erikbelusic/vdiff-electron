@@ -99,7 +99,7 @@ Creates distributable installers in `out/make/`:
 ### Publish (GitHub release)
 
 ```bash
-GITHUB_TOKEN=your_token npm run publish
+GITHUB_TOKEN=$(gh auth token) npm run publish
 ```
 
 Builds the app and creates a **draft** GitHub release with all artifacts attached. Requires a `GITHUB_TOKEN` with repo access. Review and publish the draft at https://github.com/erikbelusic/vdiff-electron/releases.

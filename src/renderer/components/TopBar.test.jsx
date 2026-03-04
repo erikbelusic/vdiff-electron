@@ -12,6 +12,8 @@ const defaultProps = {
   currentBranch: 'main',
   onTogglePromptPanel: vi.fn(),
   promptPanelOpen: false,
+  briefOutput: false,
+  onToggleBriefOutput: vi.fn(),
   onClearComments: vi.fn(),
 };
 

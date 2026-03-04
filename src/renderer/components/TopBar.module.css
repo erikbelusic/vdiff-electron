@@ -36,6 +36,20 @@
   margin-left: auto;
 }
 
+.briefToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.briefToggle input {
+  cursor: pointer;
+}
+
 .commentBadge {
   display: flex;
   align-items: center;

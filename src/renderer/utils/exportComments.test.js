@@ -100,6 +100,51 @@ test('formats multi-line comment text', () => {
   );
 });
 
+test('brief mode omits code and header', () => {
+  const comments = [
+    {
+      id: 1,
+      filePath: 'src/app.js',
+      lineIds: ['0-1'],
+      lineNum: '5',
+      code: 'const x = 1;',
+      text: 'Rename this variable',
+    },
+    {
+      id: 2,
+      filePath: 'src/utils.js',
+      lineIds: ['0-3'],
+      lineNum: '10',
+      code: 'console.log(x);',
+      text: 'Remove debug log',
+    },
+  ];
+
+  expect(generateExport(comments, { brief: true })).toBe(
+    '- src/app.js:5\n' +
+    '  - Rename this variable\n' +
+    '- src/utils.js:10\n' +
+    '  - Remove debug log\n'
+  );
+});
+
+test('brief mode handles multiline comment text', () => {
+  const comments = [{
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-1'],
+    lineNum: '5',
+    code: 'const x = 1;',
+    text: 'First line\nSecond line',
+  }];
+
+  expect(generateExport(comments, { brief: true })).toBe(
+    '- src/app.js:5\n' +
+    '  - First line\n' +
+    '  - Second line\n'
+  );
+});
+
 test('uses ? for missing lineNum', () => {
   const comments = [{
     id: 1,

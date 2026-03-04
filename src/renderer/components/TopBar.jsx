@@ -3,7 +3,7 @@ import RepositoryPicker from './RepositoryPicker';
 import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, onClearComments }) {
+function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, briefOutput, onToggleBriefOutput, onClearComments }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
@@ -23,6 +23,14 @@ function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onR
       )}
       {commentCount > 0 && (
         <div className={styles.rightSection}>
+          <label className={styles.briefToggle}>
+            <input
+              type="checkbox"
+              checked={briefOutput}
+              onChange={onToggleBriefOutput}
+            />
+            Brief
+          </label>
           <div className={styles.commentBadge}>
             {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
           </div>

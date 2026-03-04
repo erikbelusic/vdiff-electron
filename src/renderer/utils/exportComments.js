@@ -1,5 +1,17 @@
-function generateExport(comments) {
+function generateExport(comments, { brief = false } = {}) {
   if (comments.length === 0) return '';
+
+  if (brief) {
+    let out = '';
+    comments.forEach((c) => {
+      const lineLabel = c.lineNum || '?';
+      out += '- ' + c.filePath + ':' + lineLabel + '\n';
+      c.text.split('\n').forEach((line) => {
+        out += '  - ' + line + '\n';
+      });
+    });
+    return out.trimEnd() + '\n';
+  }
 
   let out = 'Code Review Comments:\n\n';
 

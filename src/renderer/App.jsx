@@ -3,6 +3,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import TopBar from './components/TopBar';
 import FileList from './components/FileList';
 import DiffViewer from './components/DiffViewer';
+import PromptPanel from './components/PromptPanel';
 import useComments from './hooks/useComments';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
   const { comments, addComment, updateComment, deleteComment } = useComments();
+  const [promptPanelOpen, setPromptPanelOpen] = useState(false);
 
   useEffect(() => {
     async function loadRepos() {
@@ -94,6 +96,8 @@ function App() {
         onRemoveRepository={handleRemoveRepository}
         currentBranch={currentBranch}
         commentCount={comments.length}
+        onTogglePromptPanel={() => setPromptPanelOpen((v) => !v)}
+        promptPanelOpen={promptPanelOpen}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <FileList
@@ -110,6 +114,12 @@ function App() {
           onDeleteComment={deleteComment}
         />
       </div>
+      {promptPanelOpen && (
+        <PromptPanel
+          comments={comments}
+          onClose={() => setPromptPanelOpen(false)}
+        />
+      )}
     </div>
   );
 }

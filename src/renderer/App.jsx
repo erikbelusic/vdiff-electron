@@ -14,7 +14,7 @@ function App() {
   const [changedFiles, setChangedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
-  const { comments, addComment, updateComment, deleteComment } = useComments();
+  const { comments, addComment, updateComment, deleteComment, clearAll } = useComments();
   const [promptPanelOpen, setPromptPanelOpen] = useState(false);
 
   useEffect(() => {
@@ -103,6 +103,7 @@ function App() {
         commentCount={comments.length}
         onTogglePromptPanel={() => setPromptPanelOpen((v) => !v)}
         promptPanelOpen={promptPanelOpen}
+        onClearComments={clearAll}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <FileList

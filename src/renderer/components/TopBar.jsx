@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import RepositoryPicker from './RepositoryPicker';
+import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen }) {
+function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, onClearComments }) {
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   return (
     <div className={styles.topBar}>
       <RepositoryPicker
@@ -23,12 +27,27 @@ function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onR
             {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
           </div>
           <button
+            className={styles.clearBtn}
+            onClick={() => setShowClearConfirm(true)}
+          >
+            Clear All
+          </button>
+          <button
             className={`${styles.promptBtn} ${promptPanelOpen ? styles.promptBtnActive : ''}`}
             onClick={onTogglePromptPanel}
           >
             Prompt Output
           </button>
         </div>
+      )}
+      {showClearConfirm && (
+        <ConfirmDialog
+          title="Clear all comments?"
+          message={`This will delete all ${commentCount} comment${commentCount === 1 ? '' : 's'}. This cannot be undone.`}
+          confirmLabel="Clear All"
+          onConfirm={() => { onClearComments(); setShowClearConfirm(false); }}
+          onCancel={() => setShowClearConfirm(false)}
+        />
       )}
     </div>
   );

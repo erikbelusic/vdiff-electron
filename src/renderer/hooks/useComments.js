@@ -22,12 +22,16 @@ function useComments() {
     setComments((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
+  const clearAll = useCallback(() => {
+    setComments([]);
+  }, []);
+
   const getCommentsForFile = useCallback(
     (filePath) => comments.filter((c) => c.filePath === filePath),
     [comments]
   );
 
-  return { comments, addComment, updateComment, deleteComment, getCommentsForFile };
+  return { comments, addComment, updateComment, deleteComment, clearAll, getCommentsForFile };
 }
 
 export default useComments;

@@ -12,6 +12,7 @@ const defaultProps = {
   currentBranch: 'main',
   onTogglePromptPanel: vi.fn(),
   promptPanelOpen: false,
+  onClearComments: vi.fn(),
 };
 
 test('shows comment badge when commentCount > 0', () => {

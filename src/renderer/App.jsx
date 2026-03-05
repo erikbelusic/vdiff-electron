@@ -37,12 +37,17 @@ function App() {
     if (!repoPath) {
       setCurrentBranch(null);
       setChangedFiles([]);
+      setSelectedFile(null);
       return [];
     }
     const branch = await window.electronAPI.getCurrentBranch(repoPath);
     setCurrentBranch(branch);
     const files = await window.electronAPI.getChangedFiles(repoPath);
     setChangedFiles(files);
+    setSelectedFile((prev) => {
+      if (prev && !files.some((f) => f.path === prev)) return null;
+      return prev;
+    });
     return files;
   }, []);
 

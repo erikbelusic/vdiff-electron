@@ -16,7 +16,7 @@ test('starts with empty comments', () => {
 });
 
 test('addComment adds a comment with auto-generated id', () => {
-  const { result } = renderHook(() => useComments('/repo'));
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   act(() => {
     result.current.addComment({
       filePath: 'src/app.js',
@@ -38,7 +38,7 @@ test('addComment adds a comment with auto-generated id', () => {
 });
 
 test('updateComment updates the text of a comment', () => {
-  const { result } = renderHook(() => useComments('/repo'));
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   let id;
   act(() => {
     id = result.current.addComment({
@@ -56,7 +56,7 @@ test('updateComment updates the text of a comment', () => {
 });
 
 test('deleteComment removes a comment', () => {
-  const { result } = renderHook(() => useComments('/repo'));
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   let id;
   act(() => {
     id = result.current.addComment({
@@ -74,7 +74,7 @@ test('deleteComment removes a comment', () => {
 });
 
 test('getCommentsForFile filters by file path', () => {
-  const { result } = renderHook(() => useComments('/repo'));
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   act(() => {
     result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Comment A' });
     result.current.addComment({ filePath: 'b.js', lineIds: ['0-0'], lineNum: '1', code: 'b', text: 'Comment B' });
@@ -86,7 +86,7 @@ test('getCommentsForFile filters by file path', () => {
 });
 
 test('pruneForFiles removes comments for files not in the list', () => {
-  const { result } = renderHook(() => useComments('/repo'));
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   act(() => {
     result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Comment A' });
     result.current.addComment({ filePath: 'b.js', lineIds: ['0-0'], lineNum: '1', code: 'b', text: 'Comment B' });
@@ -104,20 +104,32 @@ test('loadFromDisk loads persisted comments', async () => {
     { id: 10, filePath: 'x.js', lineIds: ['0-0'], lineNum: '1', code: 'x', text: 'Persisted' },
   ];
   window.electronAPI.loadComments = async () => saved;
-  const { result } = renderHook(() => useComments('/repo'));
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   await act(async () => {
-    await result.current.loadFromDisk('/repo');
+    await result.current.loadFromDisk('/repo', 'main');
   });
   expect(result.current.comments).toEqual(saved);
 });
 
-test('mutations call saveComments', () => {
-  let savedData;
-  window.electronAPI.saveComments = async (_repo, comments) => { savedData = comments; };
-  const { result } = renderHook(() => useComments('/repo'));
+test('mutations call saveComments with repo and branch', () => {
+  let savedArgs;
+  window.electronAPI.saveComments = async (repo, branch, comments) => { savedArgs = { repo, branch, comments }; };
+  const { result } = renderHook(() => useComments('/repo', 'main'));
   act(() => {
     result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Hi' });
   });
-  expect(savedData).toHaveLength(1);
-  expect(savedData[0].text).toBe('Hi');
+  expect(savedArgs.repo).toBe('/repo');
+  expect(savedArgs.branch).toBe('main');
+  expect(savedArgs.comments).toHaveLength(1);
+  expect(savedArgs.comments[0].text).toBe('Hi');
+});
+
+test('saveToDisk does nothing when branch is missing', () => {
+  let called = false;
+  window.electronAPI.saveComments = async () => { called = true; };
+  const { result } = renderHook(() => useComments('/repo', null));
+  act(() => {
+    result.current.addComment({ filePath: 'a.js', lineIds: ['0-0'], lineNum: '1', code: 'a', text: 'Hi' });
+  });
+  expect(called).toBe(false);
 });

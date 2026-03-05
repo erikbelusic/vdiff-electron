@@ -5,6 +5,7 @@ import TopBar from './components/TopBar';
 import FileList from './components/FileList';
 import DiffViewer from './components/DiffViewer';
 import PromptPanel from './components/PromptPanel';
+import SettingsDialog from './components/SettingsDialog';
 import useComments from './hooks/useComments';
 
 function App() {
@@ -14,10 +15,12 @@ function App() {
   const [changedFiles, setChangedFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
-  const { comments, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo);
+  const { comments, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo, currentBranch);
   const [promptPanelOpen, setPromptPanelOpen] = useState(false);
   const [compactOutput, setBriefOutput] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [commentExpiryDays, setCommentExpiryDays] = useState(30);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     async function loadRepos() {
@@ -29,6 +32,9 @@ function App() {
       }
       const compact = await window.electronAPI.getCompactOutput();
       setBriefOutput(compact);
+      const expiry = await window.electronAPI.getCommentExpiryDays();
+      setCommentExpiryDays(expiry);
+      await window.electronAPI.pruneExpiredBranches(expiry);
     }
     loadRepos();
   }, []);
@@ -38,7 +44,7 @@ function App() {
       setCurrentBranch(null);
       setChangedFiles([]);
       setSelectedFile(null);
-      return [];
+      return { files: [], branch: null };
     }
     const branch = await window.electronAPI.getCurrentBranch(repoPath);
     setCurrentBranch(branch);
@@ -48,13 +54,13 @@ function App() {
       if (prev && !files.some((f) => f.path === prev)) return null;
       return prev;
     });
-    return files;
+    return { files, branch };
   }, []);
 
   useEffect(() => {
     async function init() {
-      const files = await refreshRepoState(selectedRepo);
-      const loaded = await loadFromDisk(selectedRepo);
+      const { files, branch } = await refreshRepoState(selectedRepo);
+      const loaded = await loadFromDisk(selectedRepo, branch);
       if (loaded.length > 0 && files.length > 0) {
         const filePaths = files.map((f) => f.path);
         pruneForFiles(filePaths);
@@ -66,7 +72,8 @@ function App() {
   // Refresh file list and branch when window regains focus
   useEffect(() => {
     async function handleFocus() {
-      const files = await refreshRepoState(selectedRepo);
+      const { files, branch } = await refreshRepoState(selectedRepo);
+      await loadFromDisk(selectedRepo, branch);
       if (files.length > 0) {
         pruneForFiles(files.map((f) => f.path));
       }
@@ -74,7 +81,7 @@ function App() {
     }
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [selectedRepo, refreshRepoState, pruneForFiles]);
+  }, [selectedRepo, refreshRepoState, loadFromDisk, pruneForFiles]);
 
   const handleAddRepository = async () => {
     setError(null);
@@ -101,6 +108,12 @@ function App() {
     if (selectedRepo === repoPath) {
       setSelectedRepo(repos.length > 0 ? repos[0] : null);
     }
+  };
+
+  const handleSaveSettings = async (newExpiryDays) => {
+    setCommentExpiryDays(newExpiryDays);
+    await window.electronAPI.setCommentExpiryDays(newExpiryDays);
+    setShowSettings(false);
   };
 
   if (!selectedRepo) {
@@ -134,6 +147,7 @@ function App() {
           });
         }}
         onClearComments={clearAll}
+        onOpenSettings={() => setShowSettings(true)}
       />
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <FileList
@@ -156,6 +170,13 @@ function App() {
           comments={comments}
           compact={compactOutput}
           onClose={() => setPromptPanelOpen(false)}
+        />
+      )}
+      {showSettings && (
+        <SettingsDialog
+          commentExpiryDays={commentExpiryDays}
+          onSave={handleSaveSettings}
+          onCancel={() => setShowSettings(false)}
         />
       )}
     </div>

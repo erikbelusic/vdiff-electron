@@ -17,13 +17,39 @@ function writeStore(data) {
   fs.writeFileSync(storePath, JSON.stringify(data, null, 2));
 }
 
-export function getComments(repoPath) {
+export function getComments(repoPath, branch) {
   const store = readStore();
-  return store[repoPath] || [];
+  const repo = store[repoPath];
+  if (!repo || !repo[branch]) return [];
+  repo[branch].lastSeen = Date.now();
+  writeStore(store);
+  return repo[branch].comments || [];
 }
 
-export function saveComments(repoPath, comments) {
+export function saveComments(repoPath, branch, comments) {
   const store = readStore();
-  store[repoPath] = comments;
+  if (!store[repoPath]) store[repoPath] = {};
+  store[repoPath][branch] = {
+    lastSeen: Date.now(),
+    comments,
+  };
   writeStore(store);
+}
+
+export function pruneExpiredBranches(expiryDays) {
+  const store = readStore();
+  const cutoff = Date.now() - expiryDays * 24 * 60 * 60 * 1000;
+  let changed = false;
+  for (const repo of Object.keys(store)) {
+    for (const branch of Object.keys(store[repo])) {
+      if (store[repo][branch].lastSeen < cutoff) {
+        delete store[repo][branch];
+        changed = true;
+      }
+    }
+    if (Object.keys(store[repo]).length === 0) {
+      delete store[repo];
+    }
+  }
+  if (changed) writeStore(store);
 }

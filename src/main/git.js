@@ -19,10 +19,17 @@ export function isGitRepo(dirPath) {
     .catch(() => false);
 }
 
-export function getCurrentBranch(dirPath) {
-  return run(['rev-parse', '--abbrev-ref', 'HEAD'], dirPath)
-    .then((out) => out.trim())
-    .catch(() => null);
+export async function getCurrentBranch(dirPath) {
+  try {
+    const branch = (await run(['rev-parse', '--abbrev-ref', 'HEAD'], dirPath)).trim();
+    if (branch === 'HEAD') {
+      // Detached HEAD — use short SHA instead
+      return (await run(['rev-parse', '--short', 'HEAD'], dirPath)).trim();
+    }
+    return branch;
+  } catch {
+    return null;
+  }
 }
 
 async function getNumStats(dirPath) {

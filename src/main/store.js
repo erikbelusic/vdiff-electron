@@ -60,3 +60,13 @@ export function setCompactOutput(value) {
   store.compactOutput = value;
   writeStore(store);
 }
+
+export function getCommentExpiryDays() {
+  return readStore().commentExpiryDays || 30;
+}
+
+export function setCommentExpiryDays(value) {
+  const store = readStore();
+  store.commentExpiryDays = value;
+  writeStore(store);
+}

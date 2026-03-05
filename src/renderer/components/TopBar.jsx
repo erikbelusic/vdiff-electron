@@ -3,7 +3,7 @@ import RepositoryPicker from './RepositoryPicker';
 import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments }) {
+function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
@@ -21,33 +21,42 @@ function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onR
           <span>{currentBranch}</span>
         </div>
       )}
-      {commentCount > 0 && (
-        <div className={styles.rightSection}>
-          <label className={styles.compactToggle}>
-            <input
-              type="checkbox"
-              checked={compactOutput}
-              onChange={onToggleCompactOutput}
-            />
-            Compacted
-          </label>
-          <div className={styles.commentBadge}>
-            {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
-          </div>
-          <button
-            className={styles.clearBtn}
-            onClick={() => setShowClearConfirm(true)}
-          >
-            Clear All
-          </button>
-          <button
-            className={`${styles.promptBtn} ${promptPanelOpen ? styles.promptBtnActive : ''}`}
-            onClick={onTogglePromptPanel}
-          >
-            Prompt Output
-          </button>
-        </div>
-      )}
+      <div className={styles.rightSection}>
+        {commentCount > 0 && (
+          <>
+            <label className={styles.compactToggle}>
+              <input
+                type="checkbox"
+                checked={compactOutput}
+                onChange={onToggleCompactOutput}
+              />
+              Compacted
+            </label>
+            <div className={styles.commentBadge}>
+              {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+            </div>
+            <button
+              className={styles.clearBtn}
+              onClick={() => setShowClearConfirm(true)}
+            >
+              Clear All
+            </button>
+            <button
+              className={`${styles.promptBtn} ${promptPanelOpen ? styles.promptBtnActive : ''}`}
+              onClick={onTogglePromptPanel}
+            >
+              Prompt Output
+            </button>
+          </>
+        )}
+        <button
+          className={styles.gearBtn}
+          onClick={onOpenSettings}
+          aria-label="Settings"
+        >
+          &#9881;
+        </button>
+      </div>
       {showClearConfirm && (
         <ConfirmDialog
           title="Clear all comments?"

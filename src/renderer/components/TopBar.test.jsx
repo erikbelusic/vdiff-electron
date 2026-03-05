@@ -15,6 +15,7 @@ const defaultProps = {
   compactOutput: false,
   onToggleCompactOutput: vi.fn(),
   onClearComments: vi.fn(),
+  onOpenSettings: vi.fn(),
 };
 
 test('shows comment badge when commentCount > 0', () => {
@@ -29,7 +30,7 @@ test('shows singular "comment" for count of 1', () => {
 
 test('does not show comment badge when commentCount is 0', () => {
   render(<TopBar {...defaultProps} commentCount={0} />);
-  expect(screen.queryByText(/comment/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/\d+ comments?$/)).not.toBeInTheDocument();
 });
 
 test('shows Prompt Output button when comments exist', () => {
@@ -47,4 +48,16 @@ test('Prompt Output button calls onTogglePromptPanel', async () => {
 test('Prompt Output button is hidden when no comments', () => {
   render(<TopBar {...defaultProps} commentCount={0} />);
   expect(screen.queryByRole('button', { name: 'Prompt Output' })).not.toBeInTheDocument();
+});
+
+test('gear icon is always visible', () => {
+  render(<TopBar {...defaultProps} commentCount={0} />);
+  expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+});
+
+test('gear icon calls onOpenSettings', async () => {
+  const onOpen = vi.fn();
+  render(<TopBar {...defaultProps} commentCount={0} onOpenSettings={onOpen} />);
+  await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+  expect(onOpen).toHaveBeenCalled();
 });

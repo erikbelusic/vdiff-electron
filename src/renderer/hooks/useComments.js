@@ -2,24 +2,27 @@ import { useState, useCallback, useRef } from 'react';
 
 let nextId = 1;
 
-function useComments(repoPath) {
+function useComments(repoPath, branch) {
   const [comments, setComments] = useState([]);
   const repoPathRef = useRef(repoPath);
+  const branchRef = useRef(branch);
   repoPathRef.current = repoPath;
+  branchRef.current = branch;
 
   const saveToDisk = useCallback((updatedComments) => {
     const repo = repoPathRef.current;
-    if (repo) {
-      window.electronAPI.saveComments(repo, updatedComments);
+    const br = branchRef.current;
+    if (repo && br) {
+      window.electronAPI.saveComments(repo, br, updatedComments);
     }
   }, []);
 
-  const loadFromDisk = useCallback(async (repo) => {
-    if (!repo) {
+  const loadFromDisk = useCallback(async (repo, br) => {
+    if (!repo || !br) {
       setComments([]);
       return [];
     }
-    const loaded = await window.electronAPI.loadComments(repo);
+    const loaded = await window.electronAPI.loadComments(repo, br);
     if (loaded.length > 0) {
       const maxId = Math.max(...loaded.map((c) => c.id));
       if (maxId >= nextId) nextId = maxId + 1;

@@ -11,7 +11,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getCurrentBranch: (repoPath) => ipcRenderer.invoke('git:getCurrentBranch', repoPath),
   getChangedFiles: (repoPath) => ipcRenderer.invoke('git:getChangedFiles', repoPath),
   getFileDiff: (repoPath, filePath) => ipcRenderer.invoke('git:getFileDiff', repoPath, filePath),
-  loadComments: (repoPath) => ipcRenderer.invoke('comments:load', repoPath),
-  saveComments: (repoPath, comments) => ipcRenderer.invoke('comments:save', repoPath, comments),
+  loadComments: (repoPath, branch) => ipcRenderer.invoke('comments:load', repoPath, branch),
+  saveComments: (repoPath, branch, comments) => ipcRenderer.invoke('comments:save', repoPath, branch, comments),
+  pruneExpiredBranches: (expiryDays) => ipcRenderer.invoke('comments:pruneExpired', expiryDays),
+  getCommentExpiryDays: () => ipcRenderer.invoke('settings:getCommentExpiryDays'),
+  setCommentExpiryDays: (value) => ipcRenderer.invoke('settings:setCommentExpiryDays', value),
   checkForUpdate: () => ipcRenderer.invoke('app:checkForUpdate'),
 });

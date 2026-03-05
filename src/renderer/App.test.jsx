@@ -16,6 +16,9 @@ beforeEach(() => {
     getFileDiff: async () => '',
     loadComments: async () => [],
     saveComments: async () => {},
+    pruneExpiredBranches: async () => {},
+    getCommentExpiryDays: async () => 30,
+    setCommentExpiryDays: async () => {},
     checkForUpdate: async () => null,
   };
 });

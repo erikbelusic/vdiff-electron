@@ -46,10 +46,10 @@ function FileList({ files, selectedFile, onSelectFile }) {
             >
               {file.status}
             </span>
-            <span className={styles.fileName}>
-              {getFileName(file.path)}
+            <span className={styles.fileInfo}>
+              <span className={styles.fileName}>{getFileName(file.path)}</span>
               {getFileDir(file.path) && (
-                <span className={styles.filePath}> {getFileDir(file.path)}</span>
+                <span className={styles.filePath}>{getFileDir(file.path)}</span>
               )}
             </span>
             {(file.additions > 0 || file.deletions > 0) && (

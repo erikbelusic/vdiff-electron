@@ -46,8 +46,14 @@
   border-left-color: var(--color-accent);
 }
 
-.fileName {
+.fileInfo {
   flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fileName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

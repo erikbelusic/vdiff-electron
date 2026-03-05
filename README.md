@@ -2,6 +2,20 @@
 
 GUI version of [vdiff](https://github.com/erikbelusic/vdiff) — a git diff viewer with line commenting and clipboard export for AI coding agents. Built with Electron, inspired by GitHub Desktop.
 
+## Install (macOS)
+
+1. Download the `.dmg` from the [Releases page](https://github.com/erikbelusic/vdiff-electron/releases)
+2. Open it and drag **vdiff** to your Applications folder
+3. The app is not code-signed, so macOS will block it on first launch. To fix this, run:
+   ```bash
+   xattr -cr /Applications/vdiff.app
+   ```
+4. Open vdiff from Applications
+
+---
+
+# Development
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) v24+ (LTS)
@@ -88,13 +102,7 @@ Output: `out/vdiff-<platform>-<arch>/`
 npm run make
 ```
 
-Creates distributable installers in `out/make/`:
-
-| Platform | Formats |
-|----------|---------|
-| macOS | `.zip` + `.dmg` |
-| Windows | Squirrel installer |
-| Linux | `.deb`, `.rpm` |
+Creates distributable installers in `out/make/`. On macOS this produces a `.zip` and `.dmg`.
 
 ### Publish (GitHub release)
 

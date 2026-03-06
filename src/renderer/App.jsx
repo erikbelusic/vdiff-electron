@@ -7,8 +7,10 @@ import FileList from './components/FileList';
 import DiffViewer from './components/DiffViewer';
 import PromptPanel from './components/PromptPanel';
 import SettingsDialog from './components/SettingsDialog';
+import ShortcutsDialog from './components/ShortcutsDialog';
 import useComments from './hooks/useComments';
 import useTabs from './hooks/useTabs';
+import { generateExport } from './utils/exportComments';
 
 function App() {
   const [repositories, setRepositories] = useState([]);
@@ -18,6 +20,7 @@ function App() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [commentExpiryDays, setCommentExpiryDays] = useState(30);
   const [showSettings, setShowSettings] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   const { tabs, activeTab, activeTabId, addTab, closeTab, switchTab, updateTab, findTabByRepo } = useTabs();
@@ -137,9 +140,16 @@ function App() {
     closeTab(tabId);
   };
 
-  // Keyboard shortcuts: Cmd+1-9 switch tabs, Cmd+T new tab, Cmd+W close tab
+  // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e) {
+      // Escape: close topmost panel/dialog
+      if (e.key === 'Escape') {
+        if (showShortcuts) { setShowShortcuts(false); e.preventDefault(); return; }
+        if (showSettings) { setShowSettings(false); e.preventDefault(); return; }
+        if (promptPanelOpen) { setPromptPanelOpen(false); e.preventDefault(); return; }
+        return;
+      }
       if (!e.metaKey) return;
       if (e.key === 't') {
         e.preventDefault();
@@ -147,6 +157,35 @@ function App() {
       } else if (e.key === 'w') {
         e.preventDefault();
         closeTab(activeTabId);
+      } else if (e.key === ',') {
+        e.preventDefault();
+        setShowSettings(true);
+      } else if (e.key === 'h') {
+        e.preventDefault();
+        setShowShortcuts((v) => !v);
+      } else if (e.key === 'e') {
+        e.preventDefault();
+        if (selectedRepo) setPromptPanelOpen((v) => !v);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (changedFiles.length > 0) {
+          const idx = changedFiles.findIndex((f) => f.path === selectedFile);
+          const prev = idx <= 0 ? changedFiles.length - 1 : idx - 1;
+          updateTab(activeTabId, { selectedFile: changedFiles[prev].path });
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (changedFiles.length > 0) {
+          const idx = changedFiles.findIndex((f) => f.path === selectedFile);
+          const next = idx < 0 || idx >= changedFiles.length - 1 ? 0 : idx + 1;
+          updateTab(activeTabId, { selectedFile: changedFiles[next].path });
+        }
+      } else if (e.key === 'c' && e.shiftKey) {
+        e.preventDefault();
+        if (promptPanelOpen && comments.length > 0) {
+          const text = generateExport(comments, { compact: compactOutput });
+          navigator.clipboard.writeText(text);
+        }
       } else if (e.key >= '1' && e.key <= '9') {
         e.preventDefault();
         const index = parseInt(e.key, 10) - 1;
@@ -157,7 +196,7 @@ function App() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tabs, activeTabId, addTab, closeTab, switchTab]);
+  }, [tabs, activeTabId, addTab, closeTab, switchTab, showShortcuts, showSettings, promptPanelOpen, selectedRepo, selectedFile, changedFiles, comments, compactOutput, updateTab]);
 
   const disabledRepos = tabs
     .filter((t) => t.id !== activeTabId && t.repoPath)
@@ -200,6 +239,7 @@ function App() {
             }}
             onClearComments={clearAll}
             onOpenSettings={() => setShowSettings(true)}
+            onOpenShortcuts={() => setShowShortcuts(true)}
           />
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
             {selectedRepo ? (
@@ -238,6 +278,9 @@ function App() {
               onSave={handleSaveSettings}
               onCancel={() => setShowSettings(false)}
             />
+          )}
+          {showShortcuts && (
+            <ShortcutsDialog onClose={() => setShowShortcuts(false)} />
           )}
         </>
       )}

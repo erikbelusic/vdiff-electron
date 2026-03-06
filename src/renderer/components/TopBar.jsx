@@ -3,7 +3,7 @@ import RepositoryPicker from './RepositoryPicker';
 import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, disabledRepos, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings }) {
+function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, disabledRepos, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
@@ -52,8 +52,17 @@ function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onR
         )}
         <button
           className={styles.gearBtn}
+          onClick={onOpenShortcuts}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (⌘H)"
+        >
+          &#8984;
+        </button>
+        <button
+          className={styles.gearBtn}
           onClick={onOpenSettings}
           aria-label="Settings"
+          title="Settings (⌘,)"
         >
           &#9881;
         </button>

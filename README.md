@@ -2,6 +2,8 @@
 
 GUI version of [vdiff](https://github.com/erikbelusic/vdiff) — a git diff viewer with line commenting and clipboard export for AI coding agents. Built with Electron, inspired by GitHub Desktop.
 
+![description](docs/images/screenshot.png)
+
 ## Install (macOS)
 
 1. Download the `.dmg` from the [Releases page](https://github.com/erikbelusic/vdiff-electron/releases)

@@ -182,7 +182,7 @@ function App() {
         }
       } else if (e.key === 'c' && e.shiftKey) {
         e.preventDefault();
-        if (promptPanelOpen && comments.length > 0) {
+        if (comments.length > 0) {
           const text = generateExport(comments, { compact: compactOutput });
           navigator.clipboard.writeText(text);
         }

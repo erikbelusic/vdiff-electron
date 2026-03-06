@@ -5,7 +5,7 @@ function getRepoName(repoPath) {
   return repoPath.split('/').pop();
 }
 
-function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository }) {
+function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, disabledRepos = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const pickerRef = useRef(null);
 
@@ -36,31 +36,36 @@ function RepositoryPicker({ repositories, selectedRepo, onSelectRepo, onAddRepos
       {isOpen && (
         <div className={styles.dropdown} role="listbox">
           <div className={styles.repoList}>
-            {repositories.map((repo) => (
-              <div
-                key={repo}
-                className={`${styles.repoItem} ${repo === selectedRepo ? styles.selected : ''}`}
-                role="option"
-                aria-selected={repo === selectedRepo}
-                onClick={() => {
-                  onSelectRepo(repo);
-                  setIsOpen(false);
-                }}
-              >
-                <span className={styles.repoItemName}>{getRepoName(repo)}</span>
-                <span className={styles.repoItemPath}>{repo}</span>
-                <button
-                  className={styles.removeButton}
-                  aria-label={`Remove ${getRepoName(repo)}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveRepository(repo);
+            {repositories.map((repo) => {
+              const isDisabled = disabledRepos.includes(repo);
+              return (
+                <div
+                  key={repo}
+                  className={`${styles.repoItem} ${repo === selectedRepo ? styles.selected : ''} ${isDisabled ? styles.disabled : ''}`}
+                  role="option"
+                  aria-selected={repo === selectedRepo}
+                  aria-disabled={isDisabled}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    onSelectRepo(repo);
+                    setIsOpen(false);
                   }}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
+                  <span className={styles.repoItemName}>{getRepoName(repo)}</span>
+                  <span className={styles.repoItemPath}>{repo}</span>
+                  <button
+                    className={styles.removeButton}
+                    aria-label={`Remove ${getRepoName(repo)}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveRepository(repo);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
           </div>
           <button
             className={styles.addRepoButton}

@@ -69,6 +69,15 @@
   background: var(--color-bg-tertiary);
 }
 
+.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.disabled:hover {
+  background: none;
+}
+
 .selected {
   background: var(--color-bg-tertiary);
 }

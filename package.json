@@ -1,7 +1,7 @@
 {
   "name": "vdiff-electron",
   "productName": "vdiff",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Git diff viewer with line commenting and clipboard export for AI coding agents",
   "main": ".vite/build/main.js",
   "private": true,

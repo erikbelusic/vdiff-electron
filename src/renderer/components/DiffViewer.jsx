@@ -120,6 +120,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
 function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, onUpdateComment, onDeleteComment }) {
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const prevFileRef = useRef(null);
   const [activeComment, setActiveComment] = useState(null);
   const [selectedLineIds, setSelectedLineIds] = useState(new Set());
   const language = useMemo(() => filePath ? getLanguage(filePath) : null, [filePath]);
@@ -136,7 +137,9 @@ function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, on
         setHunks([]);
         return;
       }
-      setLoading(true);
+      const isNewFile = prevFileRef.current !== filePath;
+      if (isNewFile) setLoading(true);
+      prevFileRef.current = filePath;
       const raw = await window.electronAPI.getFileDiff(repoPath, filePath);
       const files = parseDiff(raw);
       const allHunks = files.flatMap((f) => f.hunks);

@@ -84,6 +84,7 @@ const EXT_MAP = {
   svg: 'xml',
   css: 'css',
   scss: 'scss',
+  haml: 'ruby',
   sass: 'scss',
   sql: 'sql',
   yml: 'yaml',

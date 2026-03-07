@@ -82,16 +82,25 @@ function App() {
   // Refresh file list and branch when window regains focus
   useEffect(() => {
     async function handleFocus() {
-      const { files, branch } = await refreshRepoState(selectedRepo, activeTabId);
+      if (!selectedRepo) return;
+      const branch = await window.electronAPI.getCurrentBranch(selectedRepo);
+      const files = await window.electronAPI.getChangedFiles(selectedRepo);
+      const filePaths = files.map((f) => f.path);
+      const preservedFile = selectedFile && filePaths.includes(selectedFile) ? selectedFile : null;
+      updateTab(activeTabId, {
+        currentBranch: branch,
+        changedFiles: files,
+        selectedFile: preservedFile,
+      });
       await loadFromDisk(selectedRepo, branch);
       if (files.length > 0) {
-        pruneForFiles(files.map((f) => f.path));
+        pruneForFiles(filePaths);
       }
       setRefreshKey((k) => k + 1);
     }
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [selectedRepo, activeTabId, refreshRepoState, loadFromDisk, pruneForFiles]);
+  }, [selectedRepo, selectedFile, activeTabId, updateTab, loadFromDisk, pruneForFiles]);
 
   const handleAddRepository = async () => {
     setError(null);

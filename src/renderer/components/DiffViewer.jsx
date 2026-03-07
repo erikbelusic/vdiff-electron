@@ -47,21 +47,23 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
                 isCommented ? styles.commented : '',
               ].filter(Boolean).join(' ');
 
+              const gutterProps = {
+                onMouseDown: (e) => { e.preventDefault(); onLineMouseDown(hunkIdx, lineIdx, line, e); },
+                onMouseEnter: () => onLineMouseEnter(hunkIdx, lineIdx, line),
+              };
+
               return [
                 <tr
                   key={lineIdx}
                   className={rowClasses}
-                  onMouseDown={(e) => { e.preventDefault(); onLineMouseDown(hunkIdx, lineIdx, line, e); }}
-                  onMouseEnter={() => onLineMouseEnter(hunkIdx, lineIdx, line)}
-                  style={{ cursor: 'pointer', userSelect: 'none' }}
                 >
-                  <td className={styles.lineNum}>
+                  <td className={styles.lineNum} {...gutterProps}>
                     {line.oldNum ?? ''}
                   </td>
-                  <td className={styles.lineNum}>
+                  <td className={styles.lineNum} {...gutterProps}>
                     {line.newNum ?? ''}
                   </td>
-                  <td className={styles.prefix}>
+                  <td className={styles.prefix} {...gutterProps}>
                     {PREFIX_MAP[line.type]}
                   </td>
                   <td

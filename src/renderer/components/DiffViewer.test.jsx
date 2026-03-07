@@ -80,10 +80,10 @@ test('shift+click selects range and opens comment input', async () => {
     el.tagName === 'TD' && el.textContent === 'const b = 3;',
   );
 
-  // Click first line (sets anchor)
-  await userEvent.click(firstLine.closest('tr'));
-  // Shift+click last line (selects range)
-  await userEvent.click(lastLine.closest('tr'), { shiftKey: true });
+  // Click first line's gutter (sets anchor)
+  await userEvent.click(firstLine.closest('tr').querySelector('td'));
+  // Shift+click last line's gutter (selects range)
+  await userEvent.click(lastLine.closest('tr').querySelector('td'), { shiftKey: true });
 
   expect(screen.getByPlaceholderText('Add a comment...')).toBeInTheDocument();
 });
@@ -94,7 +94,7 @@ test('clicking a diff line opens comment textarea', async () => {
   const line = await screen.findByText((_, el) =>
     el.tagName === 'TD' && el.textContent === 'const b = 3;',
   );
-  await userEvent.click(line.closest('tr'));
+  await userEvent.click(line.closest('tr').querySelector('td'));
 
   expect(screen.getByPlaceholderText('Add a comment...')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
@@ -132,7 +132,7 @@ test('saving a comment displays it below the line', async () => {
   const line = await screen.findByText((_, el) =>
     el.tagName === 'TD' && el.textContent === 'const b = 3;',
   );
-  await userEvent.click(line.closest('tr'));
+  await userEvent.click(line.closest('tr').querySelector('td'));
 
   // Type and save
   const textarea = screen.getByPlaceholderText('Add a comment...');
@@ -231,7 +231,7 @@ test('Cmd+Enter saves comment', async () => {
   const line = await screen.findByText((_, el) =>
     el.tagName === 'TD' && el.textContent === 'const b = 3;',
   );
-  await userEvent.click(line.closest('tr'));
+  await userEvent.click(line.closest('tr').querySelector('td'));
 
   const textarea = screen.getByPlaceholderText('Add a comment...');
   await userEvent.type(textarea, 'Keyboard save');
@@ -249,7 +249,7 @@ test('Escape cancels comment input', async () => {
   const line = await screen.findByText((_, el) =>
     el.tagName === 'TD' && el.textContent === 'const b = 3;',
   );
-  await userEvent.click(line.closest('tr'));
+  await userEvent.click(line.closest('tr').querySelector('td'));
 
   expect(screen.getByPlaceholderText('Add a comment...')).toBeInTheDocument();
 

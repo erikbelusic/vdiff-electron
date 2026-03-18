@@ -67,6 +67,18 @@
   font-size: 0.7rem;
 }
 
+.tab[draggable] {
+  cursor: grab;
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.dropTarget {
+  border-left: 2px solid var(--color-accent);
+}
+
 .closeBtn {
   font-size: 1rem;
   line-height: 1;

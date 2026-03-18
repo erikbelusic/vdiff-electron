@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import styles from './TabBar.module.css';
 
 function getRepoName(repoPath) {
@@ -5,16 +6,64 @@ function getRepoName(repoPath) {
   return repoPath.split('/').pop();
 }
 
-function TabBar({ tabs, activeTabId, onSwitchTab, onAddTab, onCloseTab }) {
+function TabBar({ tabs, activeTabId, onSwitchTab, onAddTab, onCloseTab, onReorderTabs }) {
+  const dragIndexRef = useRef(null);
+  const [dropTarget, setDropTarget] = useState(null);
+
+  function handleDragStart(e, index) {
+    dragIndexRef.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.classList.add(styles.dragging);
+  }
+
+  function handleDragEnd(e) {
+    e.currentTarget.classList.remove(styles.dragging);
+    dragIndexRef.current = null;
+    setDropTarget(null);
+  }
+
+  function handleDragOver(e, index) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragIndexRef.current !== null && dragIndexRef.current !== index) {
+      setDropTarget(index);
+    }
+  }
+
+  function handleDrop(e, index) {
+    e.preventDefault();
+    if (dragIndexRef.current !== null && dragIndexRef.current !== index) {
+      onReorderTabs(dragIndexRef.current, index);
+    }
+    dragIndexRef.current = null;
+    setDropTarget(null);
+  }
+
+  function handleDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDropTarget(null);
+    }
+  }
+
   return (
     <div className={styles.tabBar}>
       <div className={styles.tabs}>
         {tabs.map((tab, index) => (
           <button
             key={tab.id}
-            className={`${styles.tab} ${tab.id === activeTabId ? styles.active : ''}`}
+            className={
+              `${styles.tab}` +
+              `${tab.id === activeTabId ? ` ${styles.active}` : ''}` +
+              `${dropTarget === index ? ` ${styles.dropTarget}` : ''}`
+            }
             onClick={() => onSwitchTab(tab.id)}
             title={tab.repoPath ? `${tab.repoPath} (${tab.currentBranch || '...'})` : 'New Tab'}
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragEnd={handleDragEnd}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragLeave={handleDragLeave}
           >
             {index < 9 && (
               <span className={styles.shortcut}>&#8984;{index + 1}</span>

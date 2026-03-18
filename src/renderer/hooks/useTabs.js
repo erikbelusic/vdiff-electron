@@ -45,13 +45,23 @@ function useTabs() {
     setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   }, []);
 
+  const reorderTabs = useCallback((fromIndex, toIndex) => {
+    setTabs((prev) => {
+      if (fromIndex === toIndex) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  }, []);
+
   const findTabByRepo = useCallback((repoPath, excludeTabId) => {
     return tabs.find(
       (t) => t.id !== excludeTabId && t.repoPath === repoPath
     );
   }, [tabs]);
 
-  return { tabs, activeTab, activeTabId, addTab, closeTab, switchTab, updateTab, findTabByRepo };
+  return { tabs, activeTab, activeTabId, addTab, closeTab, switchTab, updateTab, reorderTabs, findTabByRepo };
 }
 
 export { createTab };

@@ -23,7 +23,7 @@ function App() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  const { tabs, activeTab, activeTabId, addTab, closeTab, switchTab, updateTab, findTabByRepo } = useTabs();
+  const { tabs, activeTab, activeTabId, addTab, closeTab, switchTab, updateTab, reorderTabs, findTabByRepo } = useTabs();
 
   const selectedRepo = activeTab.repoPath;
   const currentBranch = activeTab.currentBranch;
@@ -222,6 +222,7 @@ function App() {
         onSwitchTab={switchTab}
         onAddTab={handleAddTab}
         onCloseTab={handleCloseTab}
+        onReorderTabs={reorderTabs}
       />
       {showWelcome ? (
         <WelcomeScreen onAddRepository={handleAddRepository} error={error} />

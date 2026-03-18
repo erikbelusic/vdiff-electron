@@ -107,6 +107,18 @@
   color: var(--color-danger);
 }
 
+.reviewed {
+  opacity: 0.5;
+}
+
+.reviewCheckbox {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
 .empty {
   padding: 2rem 1rem;
   text-align: center;

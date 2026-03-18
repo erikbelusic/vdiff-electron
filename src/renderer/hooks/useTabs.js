@@ -7,6 +7,7 @@ function createTab(repoPath = null) {
     currentBranch: null,
     changedFiles: [],
     selectedFile: null,
+    reviewedFiles: {},
   };
 }
 
@@ -42,7 +43,11 @@ function useTabs() {
   }, []);
 
   const updateTab = useCallback((id, patch) => {
-    setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    setTabs((prev) => prev.map((t) => {
+      if (t.id !== id) return t;
+      const updates = typeof patch === 'function' ? patch(t) : patch;
+      return { ...t, ...updates };
+    }));
   }, []);
 
   const reorderTabs = useCallback((fromIndex, toIndex) => {

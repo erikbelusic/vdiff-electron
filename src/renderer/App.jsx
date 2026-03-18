@@ -12,6 +12,21 @@ import useComments from './hooks/useComments';
 import useTabs from './hooks/useTabs';
 import { generateExport } from './utils/exportComments';
 
+function fileFingerprint(file) {
+  return `${file.status}:${file.additions}:${file.deletions}`;
+}
+
+function pruneReviewedFiles(reviewedFiles, files) {
+  const fileMap = Object.fromEntries(files.map((f) => [f.path, fileFingerprint(f)]));
+  const pruned = {};
+  for (const [path, fp] of Object.entries(reviewedFiles)) {
+    if (fileMap[path] === fp) {
+      pruned[path] = fp;
+    }
+  }
+  return pruned;
+}
+
 function App() {
   const [repositories, setRepositories] = useState([]);
   const [error, setError] = useState(null);
@@ -29,6 +44,7 @@ function App() {
   const currentBranch = activeTab.currentBranch;
   const changedFiles = activeTab.changedFiles;
   const selectedFile = activeTab.selectedFile;
+  const reviewedFiles = activeTab.reviewedFiles;
 
   const { comments, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo, currentBranch);
 
@@ -53,16 +69,17 @@ function App() {
 
   const refreshRepoState = useCallback(async (repoPath, tabId) => {
     if (!repoPath) {
-      updateTab(tabId, { currentBranch: null, changedFiles: [], selectedFile: null });
+      updateTab(tabId, { currentBranch: null, changedFiles: [], selectedFile: null, reviewedFiles: {} });
       return { files: [], branch: null };
     }
     const branch = await window.electronAPI.getCurrentBranch(repoPath);
     const files = await window.electronAPI.getChangedFiles(repoPath);
-    updateTab(tabId, {
+    updateTab(tabId, (prev) => ({
       currentBranch: branch,
       changedFiles: files,
       selectedFile: null,
-    });
+      reviewedFiles: pruneReviewedFiles(prev.reviewedFiles, files),
+    }));
     return { files, branch };
   }, [updateTab]);
 
@@ -87,11 +104,12 @@ function App() {
       const files = await window.electronAPI.getChangedFiles(selectedRepo);
       const filePaths = files.map((f) => f.path);
       const preservedFile = selectedFile && filePaths.includes(selectedFile) ? selectedFile : null;
-      updateTab(activeTabId, {
+      updateTab(activeTabId, (prev) => ({
         currentBranch: branch,
         changedFiles: files,
         selectedFile: preservedFile,
-      });
+        reviewedFiles: pruneReviewedFiles(prev.reviewedFiles, files),
+      }));
       await loadFromDisk(selectedRepo, branch);
       if (files.length > 0) {
         pruneForFiles(filePaths);
@@ -139,6 +157,18 @@ function App() {
 
   const handleSelectFile = (filePath) => {
     updateTab(activeTabId, { selectedFile: filePath });
+  };
+
+  const handleToggleReviewed = (filePath) => {
+    const file = changedFiles.find((f) => f.path === filePath);
+    if (!file) return;
+    const next = { ...reviewedFiles };
+    if (next[filePath]) {
+      delete next[filePath];
+    } else {
+      next[filePath] = fileFingerprint(file);
+    }
+    updateTab(activeTabId, { reviewedFiles: next });
   };
 
   const handleAddTab = () => {
@@ -258,6 +288,8 @@ function App() {
                   files={changedFiles}
                   selectedFile={selectedFile}
                   onSelectFile={handleSelectFile}
+                  reviewedFiles={reviewedFiles}
+                  onToggleReviewed={handleToggleReviewed}
                 />
                 <DiffViewer
                   repoPath={selectedRepo}

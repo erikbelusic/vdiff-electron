@@ -17,7 +17,7 @@ const STATUS_LABELS = {
   R: 'Renamed',
 };
 
-function FileList({ files, selectedFile, onSelectFile }) {
+function FileList({ files, selectedFile, onSelectFile, reviewedFiles = {}, onToggleReviewed }) {
   if (files.length === 0) {
     return (
       <div className={styles.sidebar}>
@@ -33,13 +33,23 @@ function FileList({ files, selectedFile, onSelectFile }) {
         {files.length} changed {files.length === 1 ? 'file' : 'files'}
       </div>
       <div className={styles.list}>
-        {files.map((file) => (
+        {files.map((file) => {
+          const isReviewed = !!reviewedFiles[file.path];
+          return (
           <button
             key={file.path}
-            className={`${styles.fileItem} ${file.path === selectedFile ? styles.selected : ''}`}
+            className={`${styles.fileItem} ${file.path === selectedFile ? styles.selected : ''} ${isReviewed ? styles.reviewed : ''}`}
             onClick={() => onSelectFile(file.path)}
             title={file.path}
           >
+            <input
+              type="checkbox"
+              className={styles.reviewCheckbox}
+              checked={isReviewed}
+              onChange={() => onToggleReviewed(file.path)}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Mark ${file.path} as reviewed`}
+            />
             <span
               className={`${styles.statusBadge} ${styles['status' + file.status]}`}
               aria-label={STATUS_LABELS[file.status]}
@@ -63,7 +73,8 @@ function FileList({ files, selectedFile, onSelectFile }) {
               </span>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

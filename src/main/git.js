@@ -98,15 +98,10 @@ export async function getChangedFiles(dirPath) {
 
 export async function getFileDiff(dirPath, filePath) {
   try {
-    // Try staged diff first, fall back to unstaged
-    const staged = await run(['diff', '--cached', '--', filePath], dirPath)
+    // Diff working tree against HEAD to capture both staged and unstaged changes
+    const diff = await run(['diff', 'HEAD', '--', filePath], dirPath)
       .catch(() => '');
-    const unstaged = await run(['diff', '--', filePath], dirPath)
-      .catch(() => '');
-
-    if (staged && unstaged) return staged + '\n' + unstaged;
-    if (staged) return staged;
-    if (unstaged) return unstaged;
+    if (diff) return diff;
 
     // Untracked file — diff against empty tree to show all lines as additions
     const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf899d15363da7b23';

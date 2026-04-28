@@ -115,7 +115,8 @@
   background: rgba(248, 81, 73, 0.15);
 }
 
-.repoItem:hover .removeButton {
+.repoItem:hover .removeButton,
+.projectHeader:hover .removeButton {
   visibility: visible;
 }
 

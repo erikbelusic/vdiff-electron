@@ -80,6 +80,58 @@ Core value: view git diffs + comment on lines + export to clipboard for AI codin
 - [x] Configure GitHub publisher (@electron-forge/publisher-github)
 - [x] Update check notification — banner on launch if newer version exists on GitHub
 
+### 8. Worktree Support
+
+Goal: open multiple worktrees of the same project concurrently, each in its own tab, without polluting the repo list with one entry per worktree path. Add a project once (via any worktree path) and the app discovers siblings automatically via `git worktree list`.
+
+**Decisions captured from design discussion:**
+- Project identity: shared git common dir (`git rev-parse --git-common-dir`)
+- Project display name: directory name of the main worktree (auto, not editable for now)
+- Worktree label: branch name + directory suffix (covers stacked-branch worktree workflows)
+- Picker UI: render flat until a project has 2+ worktrees, then render as two-level
+- Adding a project: silent registration of the whole project (no confirmation dialog)
+- Refresh: re-run `git worktree list` on picker open (cheap; door left open for other triggers)
+- Storage migrations: versioned schema with a structured migration runner (no ad-hoc one-offs)
+
+**Storage / migrations**
+- [ ] Add `schemaVersion` field to `repositories.json` and a migration runner in `store.js` that applies ordered migrations on read
+- [ ] Define v1 schema: replace flat `repositories: string[]` with `projects: [{ gitCommonDir, mainPath }]`; keep `lastOpened` as a worktree path string
+- [ ] Write v0 → v1 migration: for each existing repo path, resolve its git common dir + main worktree, dedupe by common dir, and rewrite into the new shape
+- [ ] Unit tests for the migration runner (idempotent re-runs, malformed/legacy inputs, dedupe behavior)
+
+**Main process (git ops)**
+- [ ] Add `getGitCommonDir(path)` helper using `git rev-parse --git-common-dir`
+- [ ] Add `listWorktrees(path)` that runs `git worktree list --porcelain` and returns `[{ path, branch, head, detached }]`
+- [ ] IPC: `project:list` returns `[{ id, name, mainPath, worktrees: [...] }]` (worktrees freshly fetched per call)
+- [ ] IPC: `project:add(path)` resolves common dir, dedupes, persists, returns updated project list
+- [ ] IPC: `project:remove(id)` removes a whole project (all its worktrees go with it)
+
+**Renderer (picker UI)**
+- [ ] Refactor `RepositoryPicker` to consume projects instead of flat paths; `onSelectRepo` still emits a worktree path
+- [ ] Render flat single-worktree projects exactly as today (no visual change for users without worktrees)
+- [ ] Render two-level UI for projects with 2+ worktrees: project header + indented worktree rows
+- [ ] Worktree row label: `branch (dirSuffix)` e.g. `feature/foo (.feature-foo)`; show `(detached @ sha)` when detached
+- [ ] Refresh project list (re-call `project:list`) when the picker opens
+- [ ] Disabled state: a worktree path already open in another tab is greyed out (extend existing `disabledRepos` logic to operate on worktree paths)
+- [ ] Remove button at the project level (removes the whole project); no per-worktree remove
+
+**App wiring**
+- [ ] Replace `getRepositories` calls in `App.jsx` with the new `project:list` flow; tabs continue to store a `repoPath` (worktree path) — no tab-shape changes
+- [ ] On startup, if `lastOpened` points to a worktree path that no longer exists in any project's discovered worktrees, fall back gracefully (clear it)
+- [ ] Welcome screen continues to work when there are zero projects
+
+**Tests**
+- [ ] Unit tests for `listWorktrees` parser against fixture porcelain output (single worktree, multiple worktrees, detached HEAD, locked worktree)
+- [ ] Component test: picker renders flat for 1-worktree projects, two-level for 2+
+- [ ] Component test: selecting a worktree already open in another tab is disabled
+- [ ] Component test: removing a project removes all its worktrees from the list
+
+**Out of scope for this section (door left open):**
+- Editable project labels
+- Refreshing worktrees on tab switch / focus / interval
+- Creating, removing, or pruning worktrees from the UI
+- Per-worktree remove
+
 ---
 
 ## Future Enhancements

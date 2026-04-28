@@ -4,11 +4,12 @@ import { test, expect, vi } from 'vitest';
 import TopBar from './TopBar';
 
 const defaultProps = {
-  repositories: ['/repo'],
+  projects: [{ id: '/repo/.git', name: 'repo', mainPath: '/repo', worktrees: [{ path: '/repo', branch: 'main' }] }],
   selectedRepo: '/repo',
   onSelectRepo: vi.fn(),
   onAddRepository: vi.fn(),
-  onRemoveRepository: vi.fn(),
+  onRemoveProject: vi.fn(),
+  onRefreshProjects: vi.fn(),
   currentBranch: 'main',
   onTogglePromptPanel: vi.fn(),
   promptPanelOpen: false,

@@ -116,15 +116,15 @@ Goal: open multiple worktrees of the same project concurrently, each in its own 
 - [x] Remove button at the project level (removes the whole project); no per-worktree remove
 
 **App wiring**
-- [ ] Replace `getRepositories` calls in `App.jsx` with the new `project:list` flow; tabs continue to store a `repoPath` (worktree path) — no tab-shape changes
-- [ ] On startup, if `lastOpened` points to a worktree path that no longer exists in any project's discovered worktrees, fall back gracefully (clear it)
-- [ ] Welcome screen continues to work when there are zero projects
+- [x] Replace `getRepositories` calls in `App.jsx` with the new `project:list` flow; tabs continue to store a `repoPath` (worktree path) — no tab-shape changes
+- [x] On startup, if `lastOpened` points to a worktree path that no longer exists in any project's discovered worktrees, fall back gracefully (clear it)
+- [x] Welcome screen continues to work when there are zero projects
 
 **Tests**
 - [x] Unit tests for `listWorktrees` parser against fixture porcelain output (single worktree, multiple worktrees, detached HEAD, locked worktree)
-- [ ] Component test: picker renders flat for 1-worktree projects, two-level for 2+
-- [ ] Component test: selecting a worktree already open in another tab is disabled
-- [ ] Component test: removing a project removes all its worktrees from the list
+- [x] Component test: picker renders flat for 1-worktree projects, two-level for 2+
+- [x] Component test: selecting a worktree already open in another tab is disabled
+- [x] Component test: removing a project removes all its worktrees from the list
 
 **Out of scope for this section (door left open):**
 - Editable project labels

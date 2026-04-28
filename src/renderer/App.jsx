@@ -28,7 +28,7 @@ function pruneReviewedFiles(reviewedFiles, files) {
 }
 
 function App() {
-  const [repositories, setRepositories] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [error, setError] = useState(null);
   const [promptPanelOpen, setPromptPanelOpen] = useState(false);
   const [compactOutput, setBriefOutput] = useState(false);
@@ -50,10 +50,11 @@ function App() {
 
   useEffect(() => {
     async function loadRepos() {
-      const repos = await window.electronAPI.getRepositories();
-      setRepositories(repos);
+      const loadedProjects = await window.electronAPI.listProjects();
+      setProjects(loadedProjects);
       const lastOpened = await window.electronAPI.getLastOpened();
-      if (lastOpened && repos.includes(lastOpened)) {
+      const allWorktreePaths = loadedProjects.flatMap((p) => (p.worktrees ?? []).map((wt) => wt.path));
+      if (lastOpened && allWorktreePaths.includes(lastOpened)) {
         updateTab(activeTabId, { repoPath: lastOpened });
       }
       const compact = await window.electronAPI.getCompactOutput();
@@ -120,14 +121,19 @@ function App() {
     return () => window.removeEventListener('focus', handleFocus);
   }, [selectedRepo, selectedFile, activeTabId, updateTab, loadFromDisk, pruneForFiles]);
 
+  const handleRefreshProjects = useCallback(async () => {
+    const loadedProjects = await window.electronAPI.listProjects();
+    setProjects(loadedProjects);
+  }, []);
+
   const handleAddRepository = async () => {
     setError(null);
     const result = await window.electronAPI.selectFolder();
     if (result.error) {
       setError(result.error);
     } else if (result.path) {
-      const repos = await window.electronAPI.getRepositories();
-      setRepositories(repos);
+      const loadedProjects = await window.electronAPI.listProjects();
+      setProjects(loadedProjects);
       const existing = findTabByRepo(result.path, activeTabId);
       if (!existing) {
         updateTab(activeTabId, { repoPath: result.path });
@@ -141,11 +147,12 @@ function App() {
     await window.electronAPI.setLastOpened(repoPath);
   };
 
-  const handleRemoveRepository = async (repoPath) => {
-    const repos = await window.electronAPI.removeRepository(repoPath);
-    setRepositories(repos);
-    if (selectedRepo === repoPath) {
-      updateTab(activeTabId, { repoPath: repos.length > 0 ? repos[0] : null });
+  const handleRemoveProject = async (gitCommonDir) => {
+    const loadedProjects = await window.electronAPI.removeProject(gitCommonDir);
+    setProjects(loadedProjects);
+    const allWorktreePaths = loadedProjects.flatMap((p) => (p.worktrees ?? []).map((wt) => wt.path));
+    if (selectedRepo && !allWorktreePaths.includes(selectedRepo)) {
+      updateTab(activeTabId, { repoPath: allWorktreePaths[0] ?? null });
     }
   };
 
@@ -237,11 +244,11 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [tabs, activeTabId, addTab, closeTab, switchTab, showShortcuts, showSettings, promptPanelOpen, selectedRepo, selectedFile, changedFiles, comments, compactOutput, updateTab]);
 
-  const disabledRepos = tabs
+  const disabledRepoPaths = tabs
     .filter((t) => t.id !== activeTabId && t.repoPath)
     .map((t) => t.repoPath);
 
-  const showWelcome = !selectedRepo && repositories.length === 0;
+  const showWelcome = !selectedRepo && projects.length === 0;
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -259,12 +266,13 @@ function App() {
       ) : (
         <>
           <TopBar
-            repositories={repositories}
+            projects={projects}
             selectedRepo={selectedRepo}
             onSelectRepo={handleSelectRepo}
             onAddRepository={handleAddRepository}
-            onRemoveRepository={handleRemoveRepository}
-            disabledRepos={disabledRepos}
+            onRemoveProject={handleRemoveProject}
+            onRefreshProjects={handleRefreshProjects}
+            disabledRepoPaths={disabledRepoPaths}
             currentBranch={currentBranch}
             commentCount={comments.length}
             onTogglePromptPanel={() => setPromptPanelOpen((v) => !v)}

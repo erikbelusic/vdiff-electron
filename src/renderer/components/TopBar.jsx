@@ -3,18 +3,19 @@ import RepositoryPicker from './RepositoryPicker';
 import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ repositories, selectedRepo, onSelectRepo, onAddRepository, onRemoveRepository, disabledRepos, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
+function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemoveProject, onRefreshProjects, disabledRepoPaths, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
     <div className={styles.topBar}>
       <RepositoryPicker
-        repositories={repositories}
+        projects={projects}
         selectedRepo={selectedRepo}
         onSelectRepo={onSelectRepo}
         onAddRepository={onAddRepository}
-        onRemoveRepository={onRemoveRepository}
-        disabledRepos={disabledRepos}
+        onRemoveProject={onRemoveProject}
+        onRefreshProjects={onRefreshProjects}
+        disabledRepoPaths={disabledRepoPaths}
       />
       {currentBranch && (
         <div className={styles.branchBadge}>

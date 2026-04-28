@@ -4,6 +4,9 @@ import App from './App';
 
 beforeEach(() => {
   window.electronAPI = {
+    listProjects: async () => [],
+    addProject: async () => [],
+    removeProject: async () => [],
     getRepositories: async () => [],
     getLastOpened: async () => null,
     selectFolder: async () => ({ path: null }),

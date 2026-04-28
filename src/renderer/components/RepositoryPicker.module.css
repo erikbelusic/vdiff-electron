@@ -119,6 +119,34 @@
   visibility: visible;
 }
 
+.projectGroup {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.projectGroup:last-child {
+  border-bottom: none;
+}
+
+.projectHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem 0.25rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.projectHeaderName {
+  flex: 1;
+}
+
+.worktreeItem {
+  padding-left: 1.5rem;
+}
+
 .addRepoButton {
   display: flex;
   align-items: center;

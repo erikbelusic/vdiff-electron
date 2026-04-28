@@ -107,13 +107,13 @@ Goal: open multiple worktrees of the same project concurrently, each in its own 
 - [x] IPC: `project:remove(id)` removes a whole project (all its worktrees go with it)
 
 **Renderer (picker UI)**
-- [ ] Refactor `RepositoryPicker` to consume projects instead of flat paths; `onSelectRepo` still emits a worktree path
-- [ ] Render flat single-worktree projects exactly as today (no visual change for users without worktrees)
-- [ ] Render two-level UI for projects with 2+ worktrees: project header + indented worktree rows
-- [ ] Worktree row label: `branch (dirSuffix)` e.g. `feature/foo (.feature-foo)`; show `(detached @ sha)` when detached
-- [ ] Refresh project list (re-call `project:list`) when the picker opens
-- [ ] Disabled state: a worktree path already open in another tab is greyed out (extend existing `disabledRepos` logic to operate on worktree paths)
-- [ ] Remove button at the project level (removes the whole project); no per-worktree remove
+- [x] Refactor `RepositoryPicker` to consume projects instead of flat paths; `onSelectRepo` still emits a worktree path
+- [x] Render flat single-worktree projects exactly as today (no visual change for users without worktrees)
+- [x] Render two-level UI for projects with 2+ worktrees: project header + indented worktree rows
+- [x] Worktree row label: `branch (dirSuffix)` e.g. `feature/foo (.feature-foo)`; show `(detached @ sha)` when detached
+- [x] Refresh project list (re-call `project:list`) when the picker opens
+- [x] Disabled state: a worktree path already open in another tab is greyed out (extend existing `disabledRepos` logic to operate on worktree paths)
+- [x] Remove button at the project level (removes the whole project); no per-worktree remove
 
 **App wiring**
 - [ ] Replace `getRepositories` calls in `App.jsx` with the new `project:list` flow; tabs continue to store a `repoPath` (worktree path) — no tab-shape changes

@@ -23,6 +23,28 @@ export async function getGitCommonDir(dirPath) {
   }
 }
 
+export async function listWorktrees(dirPath) {
+  try {
+    const output = (await run(['worktree', 'list', '--porcelain'], dirPath)).trim();
+    const worktrees = [];
+    for (const block of output.split('\n\n')) {
+      const lines = block.trim().split('\n');
+      const wt = { detached: false, locked: false };
+      for (const line of lines) {
+        if (line.startsWith('worktree ')) wt.path = line.slice(9);
+        else if (line.startsWith('HEAD ')) wt.head = line.slice(5);
+        else if (line.startsWith('branch ')) wt.branch = line.slice(7).replace('refs/heads/', '');
+        else if (line === 'detached') wt.detached = true;
+        else if (line.startsWith('locked')) wt.locked = true;
+      }
+      if (wt.path) worktrees.push(wt);
+    }
+    return worktrees;
+  } catch {
+    return [];
+  }
+}
+
 export function isGitRepo(dirPath) {
   return run(['rev-parse', '--git-dir'], dirPath)
     .then(() => true)

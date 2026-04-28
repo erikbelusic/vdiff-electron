@@ -101,7 +101,7 @@ Goal: open multiple worktrees of the same project concurrently, each in its own 
 
 **Main process (git ops)**
 - [x] Add `getGitCommonDir(path)` helper using `git rev-parse --git-common-dir`
-- [ ] Add `listWorktrees(path)` that runs `git worktree list --porcelain` and returns `[{ path, branch, head, detached }]`
+- [x] Add `listWorktrees(path)` that runs `git worktree list --porcelain` and returns `[{ path, branch, head, detached }]`
 - [ ] IPC: `project:list` returns `[{ id, name, mainPath, worktrees: [...] }]` (worktrees freshly fetched per call)
 - [ ] IPC: `project:add(path)` resolves common dir, dedupes, persists, returns updated project list
 - [ ] IPC: `project:remove(id)` removes a whole project (all its worktrees go with it)

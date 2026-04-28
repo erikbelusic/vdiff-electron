@@ -121,7 +121,7 @@ Goal: open multiple worktrees of the same project concurrently, each in its own 
 - [ ] Welcome screen continues to work when there are zero projects
 
 **Tests**
-- [ ] Unit tests for `listWorktrees` parser against fixture porcelain output (single worktree, multiple worktrees, detached HEAD, locked worktree)
+- [x] Unit tests for `listWorktrees` parser against fixture porcelain output (single worktree, multiple worktrees, detached HEAD, locked worktree)
 - [ ] Component test: picker renders flat for 1-worktree projects, two-level for 2+
 - [ ] Component test: selecting a worktree already open in another tab is disabled
 - [ ] Component test: removing a project removes all its worktrees from the list

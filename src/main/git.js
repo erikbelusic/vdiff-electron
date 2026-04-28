@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import path from 'node:path';
 
 function run(args, cwd) {
   return new Promise((resolve, reject) => {
@@ -11,6 +12,15 @@ function run(args, cwd) {
       }
     });
   });
+}
+
+export async function getGitCommonDir(dirPath) {
+  try {
+    const result = (await run(['rev-parse', '--git-common-dir'], dirPath)).trim();
+    return path.resolve(dirPath, result);
+  } catch {
+    return null;
+  }
 }
 
 export function isGitRepo(dirPath) {

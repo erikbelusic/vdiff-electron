@@ -100,7 +100,7 @@ Goal: open multiple worktrees of the same project concurrently, each in its own 
 - [ ] Unit tests for the migration runner (idempotent re-runs, malformed/legacy inputs, dedupe behavior)
 
 **Main process (git ops)**
-- [ ] Add `getGitCommonDir(path)` helper using `git rev-parse --git-common-dir`
+- [x] Add `getGitCommonDir(path)` helper using `git rev-parse --git-common-dir`
 - [ ] Add `listWorktrees(path)` that runs `git worktree list --porcelain` and returns `[{ path, branch, head, detached }]`
 - [ ] IPC: `project:list` returns `[{ id, name, mainPath, worktrees: [...] }]` (worktrees freshly fetched per call)
 - [ ] IPC: `project:add(path)` resolves common dir, dedupes, persists, returns updated project list

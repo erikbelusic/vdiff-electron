@@ -1,9 +1,9 @@
 import { app, BrowserWindow, dialog, ipcMain, net } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened, getCompactOutput, setCompactOutput, getCommentExpiryDays, setCommentExpiryDays } from './store.js';
+import { migrateStore, getProjects, addProject, removeProject, getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened, getCompactOutput, setCompactOutput, getCommentExpiryDays, setCommentExpiryDays } from './store.js';
 import { getComments, saveComments, pruneExpiredBranches } from './commentsStore.js';
-import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff } from './git.js';
+import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff, listWorktrees } from './git.js';
 
 const GITHUB_OWNER = 'erikbelusic';
 const GITHUB_REPO = 'vdiff-electron';
@@ -30,7 +30,8 @@ const createWindow = () => {
   }
 };
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await migrateStore();
   createWindow();
 
   app.on('activate', () => {
@@ -60,11 +61,45 @@ ipcMain.handle('dialog:selectFolder', async () => {
   if (!isGit) {
     return { path: null, error: 'The selected folder is not a Git repository.' };
   }
-  addRepository(folderPath);
+  await addProject(folderPath);
   return { path: folderPath };
 });
 
-// Repository management
+// Project management (worktree-aware)
+ipcMain.handle('project:list', async () => {
+  const projects = await getProjects();
+  return Promise.all(
+    projects.map(async (project) => {
+      const worktrees = await listWorktrees(project.mainPath);
+      const name = project.mainPath.split('/').pop();
+      return { id: project.gitCommonDir, name, mainPath: project.mainPath, worktrees };
+    })
+  );
+});
+ipcMain.handle('project:add', async (_event, repoPath) => {
+  await addProject(repoPath);
+  const projects = await getProjects();
+  return Promise.all(
+    projects.map(async (project) => {
+      const worktrees = await listWorktrees(project.mainPath);
+      const name = project.mainPath.split('/').pop();
+      return { id: project.gitCommonDir, name, mainPath: project.mainPath, worktrees };
+    })
+  );
+});
+ipcMain.handle('project:remove', async (_event, gitCommonDir) => {
+  removeProject(gitCommonDir);
+  const projects = await getProjects();
+  return Promise.all(
+    projects.map(async (project) => {
+      const worktrees = await listWorktrees(project.mainPath);
+      const name = project.mainPath.split('/').pop();
+      return { id: project.gitCommonDir, name, mainPath: project.mainPath, worktrees };
+    })
+  );
+});
+
+// Repository management (legacy shims, kept for compatibility)
 ipcMain.handle('repo:getAll', () => getRepositories());
 ipcMain.handle('repo:remove', (_event, repoPath) => removeRepository(repoPath));
 ipcMain.handle('repo:getLastOpened', () => getLastOpened());

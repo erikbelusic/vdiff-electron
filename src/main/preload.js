@@ -2,6 +2,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   selectFolder: () => ipcRenderer.invoke('dialog:selectFolder'),
+  listProjects: () => ipcRenderer.invoke('project:list'),
+  addProject: (repoPath) => ipcRenderer.invoke('project:add', repoPath),
+  removeProject: (gitCommonDir) => ipcRenderer.invoke('project:remove', gitCommonDir),
   getRepositories: () => ipcRenderer.invoke('repo:getAll'),
   removeRepository: (repoPath) => ipcRenderer.invoke('repo:remove', repoPath),
   getLastOpened: () => ipcRenderer.invoke('repo:getLastOpened'),

@@ -94,10 +94,10 @@ Goal: open multiple worktrees of the same project concurrently, each in its own 
 - Storage migrations: versioned schema with a structured migration runner (no ad-hoc one-offs)
 
 **Storage / migrations**
-- [ ] Add `schemaVersion` field to `repositories.json` and a migration runner in `store.js` that applies ordered migrations on read
-- [ ] Define v1 schema: replace flat `repositories: string[]` with `projects: [{ gitCommonDir, mainPath }]`; keep `lastOpened` as a worktree path string
-- [ ] Write v0 → v1 migration: for each existing repo path, resolve its git common dir + main worktree, dedupe by common dir, and rewrite into the new shape
-- [ ] Unit tests for the migration runner (idempotent re-runs, malformed/legacy inputs, dedupe behavior)
+- [x] Add `schemaVersion` field to `repositories.json` and a migration runner in `store.js` that applies ordered migrations on read
+- [x] Define v1 schema: replace flat `repositories: string[]` with `projects: [{ gitCommonDir, mainPath }]`; keep `lastOpened` as a worktree path string
+- [x] Write v0 → v1 migration: for each existing repo path, resolve its git common dir + main worktree, dedupe by common dir, and rewrite into the new shape
+- [x] Unit tests for the migration runner (idempotent re-runs, malformed/legacy inputs, dedupe behavior)
 
 **Main process (git ops)**
 - [x] Add `getGitCommonDir(path)` helper using `git rev-parse --git-common-dir`

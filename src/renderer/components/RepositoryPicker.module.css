@@ -156,8 +156,15 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.75rem 0.25rem;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  background: var(--color-bg-tertiary);
+  border-top: 1px solid var(--color-border);
+  cursor: default;
+}
+
+.projectGroup:first-child .projectHeader {
+  border-top: none;
 }
 
 .projectHeaderName {
@@ -165,13 +172,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }
 
 .projectHeaderPath {
   color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  opacity: 0.6;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

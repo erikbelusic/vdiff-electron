@@ -108,6 +108,7 @@ function RepositoryPicker({
                 <div key={project.id} className={styles.projectGroup}>
                   <div className={styles.projectHeader}>
                     <span className={styles.projectHeaderName}>{project.name}</span>
+                    <span className={styles.projectHeaderPath}>{project.mainPath}</span>
                     <button
                       className={styles.removeButton}
                       aria-label={`Remove ${project.name}`}

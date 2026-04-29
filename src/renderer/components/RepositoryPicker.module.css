@@ -156,16 +156,26 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.75rem 0.25rem;
-  color: var(--color-text-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.85rem;
 }
 
 .projectHeaderName {
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.projectHeaderPath {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 
 .worktreeItem {

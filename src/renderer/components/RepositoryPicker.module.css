@@ -47,8 +47,32 @@
 }
 
 .repoList {
-  max-height: 300px;
+  max-height: 420px;
   overflow-y: auto;
+  /* Scroll shadow: fades in at bottom when there's more content below */
+  background:
+    linear-gradient(#161b22 30%, transparent) center top,
+    linear-gradient(transparent, #161b22 70%) center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 20px, 100% 20px;
+  background-attachment: local, scroll;
+}
+
+.repoList::-webkit-scrollbar {
+  width: 5px;
+}
+
+.repoList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.repoList::-webkit-scrollbar-thumb {
+  background: #444c56;
+  border-radius: 3px;
+}
+
+.repoList::-webkit-scrollbar-thumb:hover {
+  background: #768390;
 }
 
 .repoItem {

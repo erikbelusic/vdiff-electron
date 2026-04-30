@@ -1,8 +1,15 @@
-function generateExport(comments, { compact = false } = {}) {
-  if (comments.length === 0) return '';
+function generateExport(comments, { compact = false, generalComment = '' } = {}) {
+  const general = (generalComment || '').trim();
+  if (comments.length === 0 && !general) return '';
+
+  const prefix = general ? general + '\n\n' : '';
+
+  if (comments.length === 0) {
+    return prefix.trimEnd() + '\n';
+  }
 
   if (compact) {
-    let out = 'Address the following feedback:\n\n';
+    let out = prefix + 'Address the following feedback:\n\n';
     comments.forEach((c) => {
       const lineLabel = c.lineNum || '?';
       out += '- ' + c.filePath + ':' + lineLabel + '\n';
@@ -13,7 +20,7 @@ function generateExport(comments, { compact = false } = {}) {
     return out.trimEnd() + '\n';
   }
 
-  let out = 'Address the following feedback:\n\n';
+  let out = prefix + 'Address the following feedback:\n\n';
 
   comments.forEach((c) => {
     const lineLabel = c.lineNum || '?';

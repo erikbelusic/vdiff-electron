@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, net } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { migrateStore, getProjects, addProject, removeProject, getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened, getCompactOutput, setCompactOutput, getCommentExpiryDays, setCommentExpiryDays } from './store.js';
-import { getComments, saveComments, pruneExpiredBranches } from './commentsStore.js';
+import { getComments, saveComments, getGeneralComment, saveGeneralComment, pruneExpiredBranches } from './commentsStore.js';
 import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff, listWorktrees } from './git.js';
 
 const GITHUB_OWNER = 'erikbelusic';
@@ -111,6 +111,8 @@ ipcMain.handle('repo:setCompactOutput', (_event, value) => setCompactOutput(valu
 ipcMain.handle('comments:load', (_event, repoPath, branch) => getComments(repoPath, branch));
 ipcMain.handle('comments:save', (_event, repoPath, branch, comments) => saveComments(repoPath, branch, comments));
 ipcMain.handle('comments:pruneExpired', (_event, expiryDays) => pruneExpiredBranches(expiryDays));
+ipcMain.handle('comments:loadGeneral', (_event, repoPath, branch) => getGeneralComment(repoPath, branch));
+ipcMain.handle('comments:saveGeneral', (_event, repoPath, branch, text) => saveGeneralComment(repoPath, branch, text));
 
 // Settings
 ipcMain.handle('settings:getCommentExpiryDays', () => getCommentExpiryDays());

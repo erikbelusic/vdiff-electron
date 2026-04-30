@@ -3,7 +3,7 @@ import RepositoryPicker from './RepositoryPicker';
 import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemoveProject, onRefreshProjects, disabledRepoPaths, currentBranch, commentCount, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
+function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemoveProject, onRefreshProjects, disabledRepoPaths, currentBranch, commentCount, hasGeneralComment, onEditGeneralComment, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
@@ -24,6 +24,15 @@ function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemov
         </div>
       )}
       <div className={styles.rightSection}>
+        {currentBranch && (
+          <button
+            className={`${styles.generalBtn} ${hasGeneralComment ? styles.generalBtnActive : ''}`}
+            onClick={onEditGeneralComment}
+            title="Add a general comment shown above per-line feedback"
+          >
+            {hasGeneralComment ? 'Edit General Comment' : 'Add General Comment'}
+          </button>
+        )}
         {commentCount > 0 && (
           <>
             <label className={styles.compactToggle}>

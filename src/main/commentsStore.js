@@ -29,9 +29,32 @@ export function getComments(repoPath, branch) {
 export function saveComments(repoPath, branch, comments) {
   const store = readStore();
   if (!store[repoPath]) store[repoPath] = {};
+  const existing = store[repoPath][branch] || {};
   store[repoPath][branch] = {
+    ...existing,
     lastSeen: Date.now(),
     comments,
+  };
+  writeStore(store);
+}
+
+export function getGeneralComment(repoPath, branch) {
+  const store = readStore();
+  const repo = store[repoPath];
+  if (!repo || !repo[branch]) return '';
+  repo[branch].lastSeen = Date.now();
+  writeStore(store);
+  return repo[branch].generalComment || '';
+}
+
+export function saveGeneralComment(repoPath, branch, generalComment) {
+  const store = readStore();
+  if (!store[repoPath]) store[repoPath] = {};
+  const existing = store[repoPath][branch] || { comments: [] };
+  store[repoPath][branch] = {
+    ...existing,
+    lastSeen: Date.now(),
+    generalComment,
   };
   writeStore(store);
 }

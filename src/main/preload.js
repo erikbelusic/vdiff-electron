@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFileDiff: (repoPath, filePath) => ipcRenderer.invoke('git:getFileDiff', repoPath, filePath),
   loadComments: (repoPath, branch) => ipcRenderer.invoke('comments:load', repoPath, branch),
   saveComments: (repoPath, branch, comments) => ipcRenderer.invoke('comments:save', repoPath, branch, comments),
+  loadGeneralComment: (repoPath, branch) => ipcRenderer.invoke('comments:loadGeneral', repoPath, branch),
+  saveGeneralComment: (repoPath, branch, text) => ipcRenderer.invoke('comments:saveGeneral', repoPath, branch, text),
   pruneExpiredBranches: (expiryDays) => ipcRenderer.invoke('comments:pruneExpired', expiryDays),
   getCommentExpiryDays: () => ipcRenderer.invoke('settings:getCommentExpiryDays'),
   setCommentExpiryDays: (value) => ipcRenderer.invoke('settings:setCommentExpiryDays', value),

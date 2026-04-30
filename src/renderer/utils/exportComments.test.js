@@ -149,6 +149,57 @@ test('compact mode handles multiline comment text', () => {
   );
 });
 
+test('prepends general comment before per-line feedback', () => {
+  const comments = [{
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-1'],
+    lineNum: '5',
+    code: 'const x = 1;',
+    text: 'Rename this variable',
+  }];
+
+  expect(generateExport(comments, { generalComment: 'Overall, looks good. A few notes:' })).toBe(
+    'Overall, looks good. A few notes:\n' +
+    '\n' +
+    'Address the following feedback:\n' +
+    '\n' +
+    '- src/app.js:5\n' +
+    '   Code: const x = 1;\n' +
+    '   Comment: Rename this variable\n'
+  );
+});
+
+test('returns only general comment when there are no per-line comments', () => {
+  expect(generateExport([], { generalComment: 'Standalone note.' })).toBe(
+    'Standalone note.\n'
+  );
+});
+
+test('returns empty string when general comment is whitespace and no comments', () => {
+  expect(generateExport([], { generalComment: '   \n  ' })).toBe('');
+});
+
+test('prepends general comment in compact mode', () => {
+  const comments = [{
+    id: 1,
+    filePath: 'src/app.js',
+    lineIds: ['0-1'],
+    lineNum: '5',
+    code: 'const x = 1;',
+    text: 'Rename this variable',
+  }];
+
+  expect(generateExport(comments, { compact: true, generalComment: 'Top-level note.' })).toBe(
+    'Top-level note.\n' +
+    '\n' +
+    'Address the following feedback:\n' +
+    '\n' +
+    '- src/app.js:5\n' +
+    '  - Rename this variable\n'
+  );
+});
+
 test('uses ? for missing lineNum', () => {
   const comments = [{
     id: 1,

@@ -4,6 +4,7 @@ let nextId = 1;
 
 function useComments(repoPath, branch) {
   const [comments, setComments] = useState([]);
+  const [generalComment, setGeneralCommentState] = useState('');
   const repoPathRef = useRef(repoPath);
   const branchRef = useRef(branch);
   repoPathRef.current = repoPath;
@@ -20,6 +21,7 @@ function useComments(repoPath, branch) {
   const loadFromDisk = useCallback(async (repo, br) => {
     if (!repo || !br) {
       setComments([]);
+      setGeneralCommentState('');
       return [];
     }
     const loaded = await window.electronAPI.loadComments(repo, br);
@@ -28,7 +30,20 @@ function useComments(repoPath, branch) {
       if (maxId >= nextId) nextId = maxId + 1;
     }
     setComments(loaded);
+    const general = window.electronAPI.loadGeneralComment
+      ? await window.electronAPI.loadGeneralComment(repo, br)
+      : '';
+    setGeneralCommentState(general || '');
     return loaded;
+  }, []);
+
+  const setGeneralComment = useCallback((text) => {
+    setGeneralCommentState(text);
+    const repo = repoPathRef.current;
+    const br = branchRef.current;
+    if (repo && br && window.electronAPI.saveGeneralComment) {
+      window.electronAPI.saveGeneralComment(repo, br, text);
+    }
   }, []);
 
   const addComment = useCallback((comment) => {
@@ -61,6 +76,12 @@ function useComments(repoPath, branch) {
   const clearAll = useCallback(() => {
     setComments([]);
     saveToDisk([]);
+    setGeneralCommentState('');
+    const repo = repoPathRef.current;
+    const br = branchRef.current;
+    if (repo && br && window.electronAPI.saveGeneralComment) {
+      window.electronAPI.saveGeneralComment(repo, br, '');
+    }
   }, [saveToDisk]);
 
   const pruneForFiles = useCallback((validFilePaths) => {
@@ -79,7 +100,7 @@ function useComments(repoPath, branch) {
     [comments]
   );
 
-  return { comments, addComment, updateComment, deleteComment, clearAll, getCommentsForFile, loadFromDisk, pruneForFiles };
+  return { comments, generalComment, setGeneralComment, addComment, updateComment, deleteComment, clearAll, getCommentsForFile, loadFromDisk, pruneForFiles };
 }
 
 export default useComments;

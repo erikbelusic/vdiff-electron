@@ -2,8 +2,11 @@ import { useState, useMemo, useCallback } from 'react';
 import { generateExport } from '../utils/exportComments';
 import styles from './PromptPanel.module.css';
 
-function PromptPanel({ comments, compact, onClose }) {
-  const exportText = useMemo(() => generateExport(comments, { compact }), [comments, compact]);
+function PromptPanel({ comments, compact, generalComment, onClose }) {
+  const exportText = useMemo(
+    () => generateExport(comments, { compact, generalComment }),
+    [comments, compact, generalComment]
+  );
   const [showToast, setShowToast] = useState(false);
 
   const handleCopy = useCallback(() => {
@@ -13,12 +16,14 @@ function PromptPanel({ comments, compact, onClose }) {
     });
   }, [exportText]);
 
+  const hasOutput = exportText.length > 0;
+
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.title}>Review Comments</h3>
         <div className={styles.actions}>
-          {comments.length > 0 && (
+          {hasOutput && (
             <button className={styles.copyBtn} onClick={handleCopy}>
               Copy to Clipboard
             </button>
@@ -30,7 +35,7 @@ function PromptPanel({ comments, compact, onClose }) {
       </div>
       <div className={styles.body}>
         <pre className={styles.content}>
-          {comments.length === 0 ? (
+          {!hasOutput ? (
             <span className={styles.noComments}>
               Click on any diff line to add a comment...
             </span>

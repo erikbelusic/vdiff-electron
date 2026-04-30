@@ -93,6 +93,27 @@
   background: var(--color-border);
 }
 
+.generalBtn {
+  padding: 0.3rem 0.6rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.generalBtn:hover {
+  background: var(--color-border);
+}
+
+.generalBtnActive {
+  background: rgba(137, 87, 229, 0.2);
+  border-color: #8957e5;
+  color: #b58cf3;
+}
+
 .promptBtnActive {
   background: rgba(31, 111, 235, 0.2);
   border-color: #1f6feb;

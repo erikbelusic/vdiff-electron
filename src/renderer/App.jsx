@@ -8,6 +8,7 @@ import DiffViewer from './components/DiffViewer';
 import PromptPanel from './components/PromptPanel';
 import SettingsDialog from './components/SettingsDialog';
 import ShortcutsDialog from './components/ShortcutsDialog';
+import GeneralCommentDialog from './components/GeneralCommentDialog';
 import useComments from './hooks/useComments';
 import useTabs from './hooks/useTabs';
 import { generateExport } from './utils/exportComments';
@@ -36,6 +37,7 @@ function App() {
   const [commentExpiryDays, setCommentExpiryDays] = useState(30);
   const [showSettings, setShowSettings] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showGeneralComment, setShowGeneralComment] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   const { tabs, activeTab, activeTabId, addTab, closeTab, switchTab, updateTab, reorderTabs, findTabByRepo } = useTabs();
@@ -46,7 +48,7 @@ function App() {
   const selectedFile = activeTab.selectedFile;
   const reviewedFiles = activeTab.reviewedFiles;
 
-  const { comments, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo, currentBranch);
+  const { comments, generalComment, setGeneralComment, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo, currentBranch);
 
   useEffect(() => {
     async function loadRepos() {
@@ -191,6 +193,7 @@ function App() {
     function handleKeyDown(e) {
       // Escape: close topmost panel/dialog
       if (e.key === 'Escape') {
+        if (showGeneralComment) { setShowGeneralComment(false); e.preventDefault(); return; }
         if (showShortcuts) { setShowShortcuts(false); e.preventDefault(); return; }
         if (showSettings) { setShowSettings(false); e.preventDefault(); return; }
         if (promptPanelOpen) { setPromptPanelOpen(false); e.preventDefault(); return; }
@@ -228,8 +231,8 @@ function App() {
         }
       } else if (e.key === 'c' && e.shiftKey) {
         e.preventDefault();
-        if (comments.length > 0) {
-          const text = generateExport(comments, { compact: compactOutput });
+        const text = generateExport(comments, { compact: compactOutput, generalComment });
+        if (text) {
           navigator.clipboard.writeText(text);
         }
       } else if (e.key >= '1' && e.key <= '9') {
@@ -242,7 +245,7 @@ function App() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [tabs, activeTabId, addTab, closeTab, switchTab, showShortcuts, showSettings, promptPanelOpen, selectedRepo, selectedFile, changedFiles, comments, compactOutput, updateTab]);
+  }, [tabs, activeTabId, addTab, closeTab, switchTab, showShortcuts, showSettings, showGeneralComment, promptPanelOpen, selectedRepo, selectedFile, changedFiles, comments, generalComment, compactOutput, updateTab]);
 
   const disabledRepoPaths = tabs
     .filter((t) => t.id !== activeTabId && t.repoPath)
@@ -275,6 +278,8 @@ function App() {
             disabledRepoPaths={disabledRepoPaths}
             currentBranch={currentBranch}
             commentCount={comments.length}
+            hasGeneralComment={!!(generalComment && generalComment.trim())}
+            onEditGeneralComment={() => setShowGeneralComment(true)}
             onTogglePromptPanel={() => setPromptPanelOpen((v) => !v)}
             promptPanelOpen={promptPanelOpen}
             compactOutput={compactOutput}
@@ -319,7 +324,18 @@ function App() {
             <PromptPanel
               comments={comments}
               compact={compactOutput}
+              generalComment={generalComment}
               onClose={() => setPromptPanelOpen(false)}
+            />
+          )}
+          {showGeneralComment && (
+            <GeneralCommentDialog
+              value={generalComment}
+              onSave={(text) => {
+                setGeneralComment(text);
+                setShowGeneralComment(false);
+              }}
+              onCancel={() => setShowGeneralComment(false)}
             />
           )}
           {showSettings && (

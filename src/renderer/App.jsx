@@ -46,7 +46,7 @@ function App() {
   const currentBranch = activeTab.currentBranch;
   const changedFiles = activeTab.changedFiles;
   const selectedFile = activeTab.selectedFile;
-  const reviewedFiles = activeTab.reviewedFiles;
+  const reviewedFiles = activeTab.reviewedFilesByRepo[selectedRepo] || {};
 
   const { comments, generalComment, setGeneralComment, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo, currentBranch);
 
@@ -72,7 +72,7 @@ function App() {
 
   const refreshRepoState = useCallback(async (repoPath, tabId) => {
     if (!repoPath) {
-      updateTab(tabId, { currentBranch: null, changedFiles: [], selectedFile: null, reviewedFiles: {} });
+      updateTab(tabId, { currentBranch: null, changedFiles: [], selectedFile: null });
       return { files: [], branch: null };
     }
     const branch = await window.electronAPI.getCurrentBranch(repoPath);
@@ -81,7 +81,10 @@ function App() {
       currentBranch: branch,
       changedFiles: files,
       selectedFile: null,
-      reviewedFiles: pruneReviewedFiles(prev.reviewedFiles, files),
+      reviewedFilesByRepo: {
+        ...prev.reviewedFilesByRepo,
+        [repoPath]: pruneReviewedFiles(prev.reviewedFilesByRepo[repoPath] || {}, files),
+      },
     }));
     return { files, branch };
   }, [updateTab]);
@@ -111,7 +114,10 @@ function App() {
         currentBranch: branch,
         changedFiles: files,
         selectedFile: preservedFile,
-        reviewedFiles: pruneReviewedFiles(prev.reviewedFiles, files),
+        reviewedFilesByRepo: {
+          ...prev.reviewedFilesByRepo,
+          [selectedRepo]: pruneReviewedFiles(prev.reviewedFilesByRepo[selectedRepo] || {}, files),
+        },
       }));
       await loadFromDisk(selectedRepo, branch);
       if (files.length > 0) {
@@ -177,7 +183,9 @@ function App() {
     } else {
       next[filePath] = fileFingerprint(file);
     }
-    updateTab(activeTabId, { reviewedFiles: next });
+    updateTab(activeTabId, (prev) => ({
+      reviewedFilesByRepo: { ...prev.reviewedFilesByRepo, [selectedRepo]: next },
+    }));
   };
 
   const handleAddTab = () => {

@@ -7,7 +7,7 @@ function createTab(repoPath = null) {
     currentBranch: null,
     changedFiles: [],
     selectedFile: null,
-    reviewedFiles: {},
+    reviewedFilesByRepo: {},
   };
 }
 

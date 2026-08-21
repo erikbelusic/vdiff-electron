@@ -22,6 +22,7 @@
 }
 
 .fileItem {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -39,6 +40,32 @@
 
 .fileItem:hover {
   background: var(--color-bg-tertiary);
+}
+
+.tooltip {
+  position: absolute;
+  left: 0.75rem;
+  top: 100%;
+  margin-top: 4px;
+  z-index: 10;
+  max-width: 260px;
+  padding: 0.3rem 0.5rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 0.7rem;
+  white-space: normal;
+  word-break: break-all;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease 0.4s;
+}
+
+.fileItem:hover .tooltip,
+.fileItem:focus-visible .tooltip {
+  opacity: 1;
 }
 
 .selected {

@@ -40,8 +40,8 @@ function FileList({ files, selectedFile, onSelectFile, reviewedFiles = {}, onTog
             key={file.path}
             className={`${styles.fileItem} ${file.path === selectedFile ? styles.selected : ''} ${isReviewed ? styles.reviewed : ''}`}
             onClick={() => onSelectFile(file.path)}
-            title={file.path}
           >
+            <span className={styles.tooltip} aria-hidden="true">{file.path}</span>
             <input
               type="checkbox"
               className={styles.reviewCheckbox}

@@ -26,9 +26,9 @@ test('shows empty state when no files changed', () => {
 
 test('displays file names', () => {
   render(<FileList files={files} selectedFile={null} onSelectFile={() => {}} />);
-  expect(screen.getByText(/main\.js/)).toBeInTheDocument();
-  expect(screen.getByText(/App\.jsx/)).toBeInTheDocument();
-  expect(screen.getByText(/old-file\.txt/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /main\.js/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /App\.jsx/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /old-file\.txt/ })).toBeInTheDocument();
 });
 
 test('shows status badges with correct labels', () => {
@@ -50,6 +50,6 @@ test('calls onSelectFile when a file is clicked', async () => {
   const handleSelect = vi.fn();
   render(<FileList files={files} selectedFile={null} onSelectFile={handleSelect} />);
 
-  await userEvent.click(screen.getByTitle('src/main.js'));
+  await userEvent.click(screen.getByRole('button', { name: /main\.js/ }));
   expect(handleSelect).toHaveBeenCalledWith('src/main.js');
 });

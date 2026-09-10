@@ -1,0 +1,112 @@
+.picker {
+  position: relative;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  max-width: 320px;
+}
+
+.badge:hover {
+  border-color: var(--color-text-secondary);
+}
+
+.branchIcon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.commitLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arrow {
+  font-size: 0.6rem;
+  margin-left: 0.15rem;
+  flex-shrink: 0;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 340px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.workingItem {
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 600;
+}
+
+.commitList {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-size: 0.8rem;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.item:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.selected {
+  background: var(--color-bg-tertiary);
+  color: var(--color-accent);
+}
+
+.commitHash {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.commitSubject {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commitDate {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+}
+
+.status {
+  padding: 0.6rem 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}

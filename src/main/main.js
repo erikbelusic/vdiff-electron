@@ -2,8 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain, net } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { migrateStore, getProjects, addProject, removeProject, getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened, getCompactOutput, setCompactOutput, getCommentExpiryDays, setCommentExpiryDays } from './store.js';
-import { getComments, saveComments, getGeneralComment, saveGeneralComment, pruneExpiredBranches } from './commentsStore.js';
-import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff, listWorktrees } from './git.js';
+import { getComments, saveComments, getGeneralComment, saveGeneralComment, getReviewedFiles, saveReviewedFiles, pruneExpiredBranches } from './commentsStore.js';
+import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff, listWorktrees, getRecentCommits, getCommitChangedFiles, getCommitFileDiff } from './git.js';
 
 const GITHUB_OWNER = 'erikbelusic';
 const GITHUB_REPO = 'vdiff-electron';
@@ -113,6 +113,8 @@ ipcMain.handle('comments:save', (_event, repoPath, branch, comments) => saveComm
 ipcMain.handle('comments:pruneExpired', (_event, expiryDays) => pruneExpiredBranches(expiryDays));
 ipcMain.handle('comments:loadGeneral', (_event, repoPath, branch) => getGeneralComment(repoPath, branch));
 ipcMain.handle('comments:saveGeneral', (_event, repoPath, branch, text) => saveGeneralComment(repoPath, branch, text));
+ipcMain.handle('comments:loadReviewed', (_event, repoPath, key) => getReviewedFiles(repoPath, key));
+ipcMain.handle('comments:saveReviewed', (_event, repoPath, key, reviewedFiles) => saveReviewedFiles(repoPath, key, reviewedFiles));
 
 // Settings
 ipcMain.handle('settings:getCommentExpiryDays', () => getCommentExpiryDays());
@@ -122,6 +124,9 @@ ipcMain.handle('settings:setCommentExpiryDays', (_event, value) => setCommentExp
 ipcMain.handle('git:getCurrentBranch', (_event, repoPath) => getCurrentBranch(repoPath));
 ipcMain.handle('git:getChangedFiles', (_event, repoPath) => getChangedFiles(repoPath));
 ipcMain.handle('git:getFileDiff', (_event, repoPath, filePath) => getFileDiff(repoPath, filePath));
+ipcMain.handle('git:getRecentCommits', (_event, repoPath) => getRecentCommits(repoPath));
+ipcMain.handle('git:getCommitChangedFiles', (_event, repoPath, sha) => getCommitChangedFiles(repoPath, sha));
+ipcMain.handle('git:getCommitFileDiff', (_event, repoPath, sha, filePath) => getCommitFileDiff(repoPath, sha, filePath));
 
 // Update check
 ipcMain.handle('app:checkForUpdate', async () => {

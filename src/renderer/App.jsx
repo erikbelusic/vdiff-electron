@@ -12,21 +12,7 @@ import GeneralCommentDialog from './components/GeneralCommentDialog';
 import useComments from './hooks/useComments';
 import useTabs from './hooks/useTabs';
 import { generateExport } from './utils/exportComments';
-
-function fileFingerprint(file) {
-  return `${file.status}:${file.additions}:${file.deletions}`;
-}
-
-function pruneReviewedFiles(reviewedFiles, files) {
-  const fileMap = Object.fromEntries(files.map((f) => [f.path, fileFingerprint(f)]));
-  const pruned = {};
-  for (const [path, fp] of Object.entries(reviewedFiles)) {
-    if (fileMap[path] === fp) {
-      pruned[path] = fp;
-    }
-  }
-  return pruned;
-}
+import { fileFingerprint } from './utils/reviewedFiles';
 
 function App() {
   const [projects, setProjects] = useState([]);
@@ -46,9 +32,15 @@ function App() {
   const currentBranch = activeTab.currentBranch;
   const changedFiles = activeTab.changedFiles;
   const selectedFile = activeTab.selectedFile;
-  const reviewedFiles = activeTab.reviewedFilesByRepo[selectedRepo] || {};
+  const selectedCommit = activeTab.selectedCommit;
 
-  const { comments, generalComment, setGeneralComment, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles } = useComments(selectedRepo, currentBranch);
+  // Comments and reviewed-file state are keyed by branch when reviewing working
+  // changes, or by commit SHA when reviewing a specific past commit — so review
+  // progress survives switching between them and is pruned independently by
+  // the same expiry setting.
+  const commentKey = selectedCommit ? `commit:${selectedCommit}` : currentBranch;
+
+  const { comments, generalComment, setGeneralComment, addComment, updateComment, deleteComment, clearAll, loadFromDisk, pruneForFiles, reviewedFiles, toggleReviewed, pruneReviewedForFiles } = useComments(selectedRepo, commentKey);
 
   useEffect(() => {
     async function loadRepos() {
@@ -70,64 +62,58 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const refreshRepoState = useCallback(async (repoPath, tabId) => {
+  const fetchChangedFiles = useCallback((repoPath, commitSha) => {
+    return commitSha
+      ? window.electronAPI.getCommitChangedFiles(repoPath, commitSha)
+      : window.electronAPI.getChangedFiles(repoPath);
+  }, []);
+
+  const refreshRepoState = useCallback(async (repoPath, tabId, commitSha) => {
     if (!repoPath) {
       updateTab(tabId, { currentBranch: null, changedFiles: [], selectedFile: null });
       return { files: [], branch: null };
     }
     const branch = await window.electronAPI.getCurrentBranch(repoPath);
-    const files = await window.electronAPI.getChangedFiles(repoPath);
-    updateTab(tabId, (prev) => ({
-      currentBranch: branch,
-      changedFiles: files,
-      selectedFile: null,
-      reviewedFilesByRepo: {
-        ...prev.reviewedFilesByRepo,
-        [repoPath]: pruneReviewedFiles(prev.reviewedFilesByRepo[repoPath] || {}, files),
-      },
-    }));
+    const files = await fetchChangedFiles(repoPath, commitSha);
+    updateTab(tabId, { currentBranch: branch, changedFiles: files, selectedFile: null });
     return { files, branch };
-  }, [updateTab]);
+  }, [updateTab, fetchChangedFiles]);
 
   useEffect(() => {
     if (!initialized) return;
     async function init() {
-      const { files, branch } = await refreshRepoState(selectedRepo, activeTabId);
-      const loaded = await loadFromDisk(selectedRepo, branch);
-      if (loaded.length > 0 && files.length > 0) {
+      const { files, branch } = await refreshRepoState(selectedRepo, activeTabId, selectedCommit);
+      const key = selectedCommit ? `commit:${selectedCommit}` : branch;
+      await loadFromDisk(selectedRepo, key);
+      if (files.length > 0) {
         const filePaths = files.map((f) => f.path);
         pruneForFiles(filePaths);
+        pruneReviewedForFiles(files);
       }
     }
     init();
-  }, [selectedRepo, activeTabId, initialized, refreshRepoState, loadFromDisk, pruneForFiles]);
+  }, [selectedRepo, activeTabId, selectedCommit, initialized, refreshRepoState, loadFromDisk, pruneForFiles, pruneReviewedForFiles]);
 
   // Refresh file list and branch when window regains focus
   useEffect(() => {
     async function handleFocus() {
       if (!selectedRepo) return;
       const branch = await window.electronAPI.getCurrentBranch(selectedRepo);
-      const files = await window.electronAPI.getChangedFiles(selectedRepo);
+      const files = await fetchChangedFiles(selectedRepo, selectedCommit);
       const filePaths = files.map((f) => f.path);
       const preservedFile = selectedFile && filePaths.includes(selectedFile) ? selectedFile : null;
-      updateTab(activeTabId, (prev) => ({
-        currentBranch: branch,
-        changedFiles: files,
-        selectedFile: preservedFile,
-        reviewedFilesByRepo: {
-          ...prev.reviewedFilesByRepo,
-          [selectedRepo]: pruneReviewedFiles(prev.reviewedFilesByRepo[selectedRepo] || {}, files),
-        },
-      }));
-      await loadFromDisk(selectedRepo, branch);
+      updateTab(activeTabId, { currentBranch: branch, changedFiles: files, selectedFile: preservedFile });
+      const key = selectedCommit ? `commit:${selectedCommit}` : branch;
+      await loadFromDisk(selectedRepo, key);
       if (files.length > 0) {
         pruneForFiles(filePaths);
+        pruneReviewedForFiles(files);
       }
       setRefreshKey((k) => k + 1);
     }
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [selectedRepo, selectedFile, activeTabId, updateTab, loadFromDisk, pruneForFiles]);
+  }, [selectedRepo, selectedFile, selectedCommit, activeTabId, updateTab, loadFromDisk, pruneForFiles, pruneReviewedForFiles, fetchChangedFiles]);
 
   const handleRefreshProjects = useCallback(async () => {
     const loadedProjects = await window.electronAPI.listProjects();
@@ -144,15 +130,19 @@ function App() {
       setProjects(loadedProjects);
       const existing = findTabByRepo(result.path, activeTabId);
       if (!existing) {
-        updateTab(activeTabId, { repoPath: result.path });
+        updateTab(activeTabId, { repoPath: result.path, selectedCommit: null });
       }
       await window.electronAPI.setLastOpened(result.path);
     }
   };
 
   const handleSelectRepo = async (repoPath) => {
-    updateTab(activeTabId, { repoPath, selectedFile: null });
+    updateTab(activeTabId, { repoPath, selectedFile: null, selectedCommit: null });
     await window.electronAPI.setLastOpened(repoPath);
+  };
+
+  const handleSelectCommit = (sha) => {
+    updateTab(activeTabId, { selectedCommit: sha, selectedFile: null });
   };
 
   const handleRemoveProject = async (gitCommonDir) => {
@@ -177,15 +167,7 @@ function App() {
   const handleToggleReviewed = (filePath) => {
     const file = changedFiles.find((f) => f.path === filePath);
     if (!file) return;
-    const next = { ...reviewedFiles };
-    if (next[filePath]) {
-      delete next[filePath];
-    } else {
-      next[filePath] = fileFingerprint(file);
-    }
-    updateTab(activeTabId, (prev) => ({
-      reviewedFilesByRepo: { ...prev.reviewedFilesByRepo, [selectedRepo]: next },
-    }));
+    toggleReviewed(filePath, fileFingerprint(file));
   };
 
   const handleAddTab = () => {
@@ -285,6 +267,8 @@ function App() {
             onRefreshProjects={handleRefreshProjects}
             disabledRepoPaths={disabledRepoPaths}
             currentBranch={currentBranch}
+            selectedCommit={selectedCommit}
+            onSelectCommit={handleSelectCommit}
             commentCount={comments.length}
             hasGeneralComment={!!(generalComment && generalComment.trim())}
             onEditGeneralComment={() => setShowGeneralComment(true)}
@@ -315,6 +299,7 @@ function App() {
                 <DiffViewer
                   repoPath={selectedRepo}
                   filePath={selectedFile}
+                  commit={selectedCommit}
                   refreshKey={refreshKey}
                   comments={comments}
                   onAddComment={addComment}

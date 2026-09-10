@@ -22,6 +22,7 @@ const MOCK_DIFF = `diff --git a/src/app.js b/src/app.js
 beforeEach(() => {
   window.electronAPI = {
     getFileDiff: vi.fn(async () => MOCK_DIFF),
+    getCommitFileDiff: vi.fn(async () => MOCK_DIFF),
   };
 });
 
@@ -40,6 +41,14 @@ test('renders diff lines with additions and deletions', async () => {
   expect(screen.getByText((_, el) =>
     el.tagName === 'TD' && el.textContent === 'const b = 2;',
   )).toBeInTheDocument();
+});
+
+test('fetches the commit diff instead of the working diff when a commit is selected', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" commit="abc123" {...defaultProps} />);
+
+  await screen.findByText(/@@ -1,3 \+1,3 @@ function init\(\)/);
+  expect(window.electronAPI.getCommitFileDiff).toHaveBeenCalledWith('/repo', 'abc123', 'src/app.js');
+  expect(window.electronAPI.getFileDiff).not.toHaveBeenCalled();
 });
 
 test('renders hunk header', async () => {

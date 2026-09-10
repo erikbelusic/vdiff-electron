@@ -59,6 +59,27 @@ export function saveGeneralComment(repoPath, branch, generalComment) {
   writeStore(store);
 }
 
+export function getReviewedFiles(repoPath, key) {
+  const store = readStore();
+  const repo = store[repoPath];
+  if (!repo || !repo[key]) return {};
+  repo[key].lastSeen = Date.now();
+  writeStore(store);
+  return repo[key].reviewedFiles || {};
+}
+
+export function saveReviewedFiles(repoPath, key, reviewedFiles) {
+  const store = readStore();
+  if (!store[repoPath]) store[repoPath] = {};
+  const existing = store[repoPath][key] || {};
+  store[repoPath][key] = {
+    ...existing,
+    lastSeen: Date.now(),
+    reviewedFiles,
+  };
+  writeStore(store);
+}
+
 export function pruneExpiredBranches(expiryDays) {
   const store = readStore();
   const cutoff = Date.now() - expiryDays * 24 * 60 * 60 * 1000;

@@ -68,6 +68,20 @@ export async function getCurrentBranch(dirPath) {
   }
 }
 
+export function parseNumStatOutput(output) {
+  const stats = {};
+  for (const line of output.split('\n')) {
+    if (!line) continue;
+    const [add, del, file] = line.split('\t');
+    if (!file) continue;
+    if (!stats[file]) stats[file] = { additions: 0, deletions: 0 };
+    // Binary files show '-' for counts
+    if (add !== '-') stats[file].additions += parseInt(add, 10);
+    if (del !== '-') stats[file].deletions += parseInt(del, 10);
+  }
+  return stats;
+}
+
 async function getNumStats(dirPath) {
   const stats = {};
   // Staged changes
@@ -76,14 +90,11 @@ async function getNumStats(dirPath) {
   const unstaged = await run(['diff', '--numstat'], dirPath).catch(() => '');
 
   for (const output of [staged, unstaged]) {
-    for (const line of output.split('\n')) {
-      if (!line) continue;
-      const [add, del, file] = line.split('\t');
-      if (!file) continue;
+    const parsed = parseNumStatOutput(output);
+    for (const [file, fileStats] of Object.entries(parsed)) {
       if (!stats[file]) stats[file] = { additions: 0, deletions: 0 };
-      // Binary files show '-' for counts
-      if (add !== '-') stats[file].additions += parseInt(add, 10);
-      if (del !== '-') stats[file].deletions += parseInt(del, 10);
+      stats[file].additions += fileStats.additions;
+      stats[file].deletions += fileStats.deletions;
     }
   }
   return stats;
@@ -156,5 +167,64 @@ export async function getFileDiff(dirPath, filePath) {
     });
   } catch {
     return '';
+  }
+}
+
+const COMMIT_LOG_FORMAT = '%H%x1f%h%x1f%an%x1f%ar%x1f%s';
+
+export function parseCommitLog(output) {
+  return output
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const [hash, shortHash, author, relativeDate, subject] = line.split('\x1f');
+      return { hash, shortHash, author, relativeDate, subject };
+    });
+}
+
+export async function getRecentCommits(dirPath, limit = 50) {
+  try {
+    const output = await run(['log', `-n${limit}`, `--pretty=format:${COMMIT_LOG_FORMAT}`], dirPath);
+    return parseCommitLog(output);
+  } catch {
+    return [];
+  }
+}
+
+export function parseCommitNameStatus(output, numStats) {
+  return output
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const parts = line.split('\t');
+      const status = parts[0][0]; // strip rename/copy similarity score, e.g. R100 -> R
+      const filePath = parts[parts.length - 1]; // new path for renames/copies
+      const stats = numStats[filePath] || { additions: 0, deletions: 0 };
+      return {
+        path: filePath,
+        status,
+        additions: stats.additions,
+        deletions: stats.deletions,
+      };
+    });
+}
+
+export async function getCommitChangedFiles(dirPath, sha) {
+  try {
+    const [nameStatus, numstat] = await Promise.all([
+      run(['show', '--format=', '--name-status', sha], dirPath),
+      run(['show', '--format=', '--numstat', sha], dirPath),
+    ]);
+    return parseCommitNameStatus(nameStatus, parseNumStatOutput(numstat));
+  } catch {
+    return [];
+  }
+}
+
+export async function getCommitFileDiff(dirPath, sha, filePath) {
+  try {
+    return await run(['show', sha, '--', filePath], dirPath);
+  } catch (err) {
+    return err.stdout || '';
   }
 }

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { parseWorktreePorcelain } from './git.js';
+import { parseWorktreePorcelain, parseCommitLog, parseCommitNameStatus, parseNumStatOutput } from './git.js';
 
 const SINGLE_WORKTREE = `worktree /repo/main
 HEAD abc1234567890abc1234567890abc1234567890ab
@@ -72,5 +72,79 @@ describe('parseWorktreePorcelain', () => {
 
   test('returns empty array for empty input', () => {
     expect(parseWorktreePorcelain('')).toEqual([]);
+  });
+});
+
+describe('parseCommitLog', () => {
+  test('parses commit log lines into commit objects', () => {
+    const output = [
+      'abc123full\x1fabc123\x1fJane Doe\x1f2 hours ago\x1fFix login bug',
+      'def456full\x1fdef456\x1fJohn Smith\x1f1 day ago\x1fAdd tests',
+    ].join('\n');
+    const result = parseCommitLog(output);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      hash: 'abc123full',
+      shortHash: 'abc123',
+      author: 'Jane Doe',
+      relativeDate: '2 hours ago',
+      subject: 'Fix login bug',
+    });
+    expect(result[1].subject).toBe('Add tests');
+  });
+
+  test('returns empty array for empty input', () => {
+    expect(parseCommitLog('')).toEqual([]);
+  });
+});
+
+describe('parseNumStatOutput', () => {
+  test('parses numstat lines into a path-keyed map', () => {
+    const output = '5\t2\tsrc/main.js\n10\t0\tsrc/new.js';
+    expect(parseNumStatOutput(output)).toEqual({
+      'src/main.js': { additions: 5, deletions: 2 },
+      'src/new.js': { additions: 10, deletions: 0 },
+    });
+  });
+
+  test('treats "-" counts (binary files) as zero', () => {
+    const output = '-\t-\tsrc/image.png';
+    expect(parseNumStatOutput(output)).toEqual({
+      'src/image.png': { additions: 0, deletions: 0 },
+    });
+  });
+
+  test('returns empty object for empty input', () => {
+    expect(parseNumStatOutput('')).toEqual({});
+  });
+});
+
+describe('parseCommitNameStatus', () => {
+  test('parses added, modified, and deleted files with stats', () => {
+    const output = 'A\tsrc/new.js\nM\tsrc/main.js\nD\tsrc/old.js';
+    const numStats = {
+      'src/new.js': { additions: 10, deletions: 0 },
+      'src/main.js': { additions: 5, deletions: 2 },
+      'src/old.js': { additions: 0, deletions: 8 },
+    };
+    const result = parseCommitNameStatus(output, numStats);
+    expect(result).toEqual([
+      { path: 'src/new.js', status: 'A', additions: 10, deletions: 0 },
+      { path: 'src/main.js', status: 'M', additions: 5, deletions: 2 },
+      { path: 'src/old.js', status: 'D', additions: 0, deletions: 8 },
+    ]);
+  });
+
+  test('strips similarity score from rename/copy status and uses the new path', () => {
+    const output = 'R100\tsrc/old-name.js\tsrc/new-name.js';
+    const numStats = { 'src/new-name.js': { additions: 1, deletions: 1 } };
+    const result = parseCommitNameStatus(output, numStats);
+    expect(result).toEqual([
+      { path: 'src/new-name.js', status: 'R', additions: 1, deletions: 1 },
+    ]);
+  });
+
+  test('returns empty array for empty input', () => {
+    expect(parseCommitNameStatus('', {})).toEqual([]);
   });
 });

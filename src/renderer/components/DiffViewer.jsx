@@ -117,7 +117,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
   );
 }
 
-function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, onUpdateComment, onDeleteComment }) {
+function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddComment, onUpdateComment, onDeleteComment }) {
   const [hunks, setHunks] = useState([]);
   const [loading, setLoading] = useState(false);
   const prevFileRef = useRef(null);
@@ -140,14 +140,16 @@ function DiffViewer({ repoPath, filePath, refreshKey, comments, onAddComment, on
       const isNewFile = prevFileRef.current !== filePath;
       if (isNewFile) setLoading(true);
       prevFileRef.current = filePath;
-      const raw = await window.electronAPI.getFileDiff(repoPath, filePath);
+      const raw = commit
+        ? await window.electronAPI.getCommitFileDiff(repoPath, commit, filePath)
+        : await window.electronAPI.getFileDiff(repoPath, filePath);
       const files = parseDiff(raw);
       const allHunks = files.flatMap((f) => f.hunks);
       setHunks(allHunks);
       setLoading(false);
     }
     loadDiff();
-  }, [repoPath, filePath, refreshKey]);
+  }, [repoPath, filePath, commit, refreshKey]);
 
   // Clear active comment when file changes
   useEffect(() => {

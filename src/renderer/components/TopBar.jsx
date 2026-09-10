@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import RepositoryPicker from './RepositoryPicker';
+import CommitPicker from './CommitPicker';
 import ConfirmDialog from './ConfirmDialog';
 import styles from './TopBar.module.css';
 
-function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemoveProject, onRefreshProjects, disabledRepoPaths, currentBranch, commentCount, hasGeneralComment, onEditGeneralComment, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
+function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemoveProject, onRefreshProjects, disabledRepoPaths, currentBranch, selectedCommit, onSelectCommit, commentCount, hasGeneralComment, onEditGeneralComment, onTogglePromptPanel, promptPanelOpen, compactOutput, onToggleCompactOutput, onClearComments, onOpenSettings, onOpenShortcuts }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
@@ -18,10 +19,12 @@ function TopBar({ projects, selectedRepo, onSelectRepo, onAddRepository, onRemov
         disabledRepoPaths={disabledRepoPaths}
       />
       {currentBranch && (
-        <div className={styles.branchBadge}>
-          <span className={styles.branchIcon}>&#9741;</span>
-          <span>{currentBranch}</span>
-        </div>
+        <CommitPicker
+          repoPath={selectedRepo}
+          currentBranch={currentBranch}
+          selectedCommit={selectedCommit}
+          onSelectCommit={onSelectCommit}
+        />
       )}
       <div className={styles.rightSection}>
         {currentBranch && (

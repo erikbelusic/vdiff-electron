@@ -133,3 +133,44 @@ test('saveToDisk does nothing when branch is missing', () => {
   });
   expect(called).toBe(false);
 });
+
+test('toggleReviewed marks and unmarks a file and persists to disk', () => {
+  let saved;
+  window.electronAPI.saveReviewedFiles = async (repo, branch, reviewedFiles) => { saved = { repo, branch, reviewedFiles }; };
+  const { result } = renderHook(() => useComments('/repo', 'main'));
+
+  act(() => {
+    result.current.toggleReviewed('a.js', 'M:1:0');
+  });
+  expect(result.current.reviewedFiles).toEqual({ 'a.js': 'M:1:0' });
+  expect(saved).toEqual({ repo: '/repo', branch: 'main', reviewedFiles: { 'a.js': 'M:1:0' } });
+
+  act(() => {
+    result.current.toggleReviewed('a.js', 'M:1:0');
+  });
+  expect(result.current.reviewedFiles).toEqual({});
+});
+
+test('pruneReviewedForFiles drops entries whose fingerprint no longer matches', () => {
+  window.electronAPI.saveReviewedFiles = async () => {};
+  const { result } = renderHook(() => useComments('/repo', 'main'));
+
+  act(() => {
+    result.current.toggleReviewed('a.js', 'M:1:0');
+    result.current.toggleReviewed('b.js', 'M:2:0');
+  });
+  act(() => {
+    // a.js still matches its fingerprint, b.js changed and no longer matches
+    result.current.pruneReviewedForFiles([{ path: 'a.js', status: 'M', additions: 1, deletions: 0 }]);
+  });
+  expect(result.current.reviewedFiles).toEqual({ 'a.js': 'M:1:0' });
+});
+
+test('loadFromDisk loads persisted reviewed files', async () => {
+  window.electronAPI.loadReviewedFiles = async () => ({ 'x.js': 'M:1:0' });
+  const { result } = renderHook(() => useComments('/repo', 'main'));
+  await act(async () => {
+    await result.current.loadFromDisk('/repo', 'main');
+  });
+  expect(result.current.reviewedFiles).toEqual({ 'x.js': 'M:1:0' });
+});

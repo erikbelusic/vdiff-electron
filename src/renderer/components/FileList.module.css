@@ -134,7 +134,7 @@
   color: var(--color-danger);
 }
 
-.reviewed {
+.reviewed > *:not(.tooltip) {
   opacity: 0.5;
 }
 

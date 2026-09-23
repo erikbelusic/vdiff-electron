@@ -266,3 +266,67 @@ test('Escape cancels comment input', async () => {
 
   expect(screen.queryByPlaceholderText('Add a comment...')).not.toBeInTheDocument();
 });
+
+test('⌘F opens a find bar that counts matches case-insensitively', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+  await screen.findByText(/@@ -1,3/);
+
+  await userEvent.keyboard('{Meta>}f{/Meta}');
+  const input = screen.getByRole('textbox', { name: 'Find in diff' });
+  expect(input).toHaveFocus();
+
+  await userEvent.type(input, 'CONST B');
+  expect(screen.getByText('1 of 2')).toBeInTheDocument();
+});
+
+test('Enter, Shift+Enter, and ⌘G step through matches and wrap around', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+  await screen.findByText(/@@ -1,3/);
+
+  await userEvent.keyboard('{Meta>}f{/Meta}');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Find in diff' }), 'const');
+  expect(screen.getByText('1 of 4')).toBeInTheDocument();
+
+  await userEvent.keyboard('{Enter}');
+  expect(screen.getByText('2 of 4')).toBeInTheDocument();
+
+  await userEvent.keyboard('{Shift>}{Enter}{Enter}{/Shift}');
+  expect(screen.getByText('4 of 4')).toBeInTheDocument();
+
+  await userEvent.keyboard('{Meta>}g{/Meta}');
+  expect(screen.getByText('1 of 4')).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: 'Previous match' }));
+  expect(screen.getByText('4 of 4')).toBeInTheDocument();
+});
+
+test('shows "No results" when nothing matches', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+  await screen.findByText(/@@ -1,3/);
+
+  await userEvent.keyboard('{Meta>}f{/Meta}');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Find in diff' }), 'zzz');
+  expect(screen.getByText('No results')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Next match' })).toBeDisabled();
+});
+
+test('Escape closes the find bar', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+  await screen.findByText(/@@ -1,3/);
+
+  await userEvent.keyboard('{Meta>}f{/Meta}');
+  await userEvent.keyboard('{Escape}');
+  expect(screen.queryByRole('textbox', { name: 'Find in diff' })).not.toBeInTheDocument();
+});
+
+test('navigating to a match in a collapsed hunk expands it', async () => {
+  render(<DiffViewer repoPath="/repo" filePath="src/app.js" {...defaultProps} />);
+  await userEvent.click(await screen.findByRole('button', { expanded: true }));
+
+  await userEvent.keyboard('{Meta>}f{/Meta}');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Find in diff' }), 'const a');
+  expect(screen.getByRole('button', { expanded: true })).toBeInTheDocument();
+  expect(screen.getByText((_, el) =>
+    el.tagName === 'TD' && el.textContent === 'const a = 1;',
+  )).toBeInTheDocument();
+});

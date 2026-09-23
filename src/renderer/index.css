@@ -37,3 +37,14 @@ body {
   line-height: 1.5;
   overflow: hidden;
 }
+
+/* Find-in-diff highlights (CSS Custom Highlight API, see DiffViewer) */
+::highlight(find-match) {
+  background-color: rgba(187, 128, 9, 0.4);
+  color: inherit;
+}
+
+::highlight(find-current) {
+  background-color: #f2cc60;
+  color: #0d1117;
+}

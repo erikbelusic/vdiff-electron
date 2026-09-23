@@ -3,18 +3,41 @@ import { parseDiff } from '../utils/parseDiff';
 import { getLanguage, highlightLine } from '../utils/highlight';
 import CommentInput from './CommentInput';
 import CommentDisplay from './CommentDisplay';
+import FindBar from './FindBar';
+import { findMatches } from '../utils/findMatches';
 import 'highlight.js/styles/github-dark.css';
 import styles from './DiffViewer.module.css';
 
 const PREFIX_MAP = { addition: '+', deletion: '-', context: ' ' };
 
+// Builds a DOM Range over [start, end) of an element's text, spanning the
+// syntax-highlighting spans it may be split across.
+function textRange(el, start, end) {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  let offset = 0;
+  let started = false;
+  let node;
+  while ((node = walker.nextNode())) {
+    const len = node.textContent.length;
+    if (!started && start < offset + len) {
+      range.setStart(node, start - offset);
+      started = true;
+    }
+    if (started && end <= offset + len) {
+      range.setEnd(node, end - offset);
+      return range;
+    }
+    offset += len;
+  }
+  return null;
+}
+
 function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileComments, onLineMouseDown, onLineMouseEnter, onSaveComment, onCancelComment, onEditComment, onDeleteComment }) {
-  const [collapsed, setCollapsed] = useState(false);
-
+function Hunk({ hunk, hunkIdx, collapsed, onToggleCollapsed, language, activeComment, selectedLineIds, fileComments, onLineMouseDown, onLineMouseEnter, onSaveComment, onCancelComment, onEditComment, onDeleteComment }) {
   const commentedLineIds = useMemo(() => {
     const ids = new Set();
     (fileComments || []).forEach((c) => c.lineIds.forEach((id) => ids.add(id)));
@@ -25,7 +48,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
     <div className={styles.hunk}>
       <button
         className={styles.hunkHeader}
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={() => onToggleCollapsed(hunkIdx)}
         aria-expanded={!collapsed}
       >
         <span className={styles.collapseArrow}>{collapsed ? '\u25B6' : '\u25BC'}</span>
@@ -68,6 +91,7 @@ function Hunk({ hunk, hunkIdx, language, activeComment, selectedLineIds, fileCom
                   </td>
                   <td
                     className={styles.content}
+                    data-line-id={lineId}
                     dangerouslySetInnerHTML={
                       language
                         ? { __html: highlightLine(line.content, language) || escapeHtml(line.content) }
@@ -125,6 +149,16 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
   const [selectedLineIds, setSelectedLineIds] = useState(new Set());
   const language = useMemo(() => filePath ? getLanguage(filePath) : null, [filePath]);
   const dragRef = useRef(null); // { hunkIdx, anchorIdx, currentIdx }
+  const scrollRef = useRef(null);
+  const [collapsedHunks, setCollapsedHunks] = useState(new Set());
+  const [findOpen, setFindOpen] = useState(false);
+  const [findQuery, setFindQuery] = useState('');
+  const [findIndex, setFindIndex] = useState(0);
+  const [findFocusKey, setFindFocusKey] = useState(0);
+  const pendingScrollRef = useRef(false);
+
+  const matches = useMemo(() => findMatches(hunks, findQuery), [hunks, findQuery]);
+  const currentMatchIdx = matches.length ? Math.min(findIndex, matches.length - 1) : 0;
 
   const fileComments = useMemo(
     () => (comments || []).filter((c) => c.filePath === filePath),
@@ -156,7 +190,95 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
     setActiveComment(null);
     dragRef.current = null;
     setSelectedLineIds(new Set());
+    setCollapsedHunks(new Set());
+    setFindIndex(0);
   }, [filePath]);
+
+  const toggleCollapsed = useCallback((hunkIdx) => {
+    setCollapsedHunks((prev) => {
+      const next = new Set(prev);
+      if (next.has(hunkIdx)) next.delete(hunkIdx); else next.add(hunkIdx);
+      return next;
+    });
+  }, []);
+
+  // Jump to a match: expand its hunk if collapsed, then scroll to it after render
+  const goToMatch = useCallback((index, matchList) => {
+    if (matchList.length === 0) return;
+    const wrapped = (index + matchList.length) % matchList.length;
+    const { hunkIdx } = matchList[wrapped];
+    setFindIndex(wrapped);
+    setCollapsedHunks((prev) => {
+      if (!prev.has(hunkIdx)) return prev;
+      const next = new Set(prev);
+      next.delete(hunkIdx);
+      return next;
+    });
+    pendingScrollRef.current = true;
+  }, []);
+
+  const handleFindQueryChange = (query) => {
+    setFindQuery(query);
+    setFindIndex(0);
+    goToMatch(0, findMatches(hunks, query));
+  };
+  const handleFindNext = useCallback(() => goToMatch(currentMatchIdx + 1, matches), [goToMatch, currentMatchIdx, matches]);
+  const handleFindPrev = useCallback(() => goToMatch(currentMatchIdx - 1, matches), [goToMatch, currentMatchIdx, matches]);
+
+  // ⌘F opens find; ⌘G / ⌘⇧G step through matches
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (!e.metaKey || !filePath) return;
+      const key = e.key.toLowerCase();
+      if (key === 'f' && !e.shiftKey) {
+        e.preventDefault();
+        setFindOpen(true);
+        setFindFocusKey((k) => k + 1);
+      } else if (key === 'g' && findOpen) {
+        e.preventDefault();
+        if (e.shiftKey) handleFindPrev(); else handleFindNext();
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filePath, findOpen, handleFindNext, handleFindPrev]);
+
+  // Paint matches with the CSS Custom Highlight API (no DOM mutation, so it
+  // coexists with syntax highlighting and React's rendering)
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || typeof CSS === 'undefined' || !CSS.highlights) return;
+    const all = [];
+    let current = null;
+    if (findOpen && matches.length > 0) {
+      const cells = new Map();
+      container.querySelectorAll('[data-line-id]').forEach((el) => cells.set(el.dataset.lineId, el));
+      matches.forEach((m, i) => {
+        const cell = cells.get(`${m.hunkIdx}-${m.lineIdx}`);
+        const range = cell && textRange(cell, m.start, m.end);
+        if (!range) return;
+        all.push(range);
+        if (i === currentMatchIdx) current = range;
+      });
+    }
+    CSS.highlights.set('find-match', new Highlight(...all));
+    CSS.highlights.set('find-current', current ? new Highlight(current) : new Highlight());
+
+    if (pendingScrollRef.current && current) {
+      pendingScrollRef.current = false;
+      const rect = current.getBoundingClientRect();
+      const box = container.getBoundingClientRect();
+      if (rect.top < box.top || rect.bottom > box.bottom) {
+        container.scrollTop += rect.top - box.top - box.height / 2;
+      }
+    }
+  });
+
+  useEffect(() => () => {
+    if (typeof CSS === 'undefined' || !CSS.highlights) return;
+    CSS.highlights.delete('find-match');
+    CSS.highlights.delete('find-current');
+  }, []);
 
   const buildLineId = (hIdx, lIdx) => `${hIdx}-${lIdx}`;
 
@@ -290,12 +412,27 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.wrapper}>
+      {findOpen && (
+        <FindBar
+          query={findQuery}
+          onQueryChange={handleFindQueryChange}
+          matchCount={matches.length}
+          currentIndex={currentMatchIdx}
+          onNext={handleFindNext}
+          onPrev={handleFindPrev}
+          onClose={() => setFindOpen(false)}
+          focusKey={findFocusKey}
+        />
+      )}
+      <div className={styles.container} ref={scrollRef}>
       {hunks.map((hunk, hunkIdx) => (
         <Hunk
           key={hunkIdx}
           hunk={hunk}
           hunkIdx={hunkIdx}
+          collapsed={collapsedHunks.has(hunkIdx)}
+          onToggleCollapsed={toggleCollapsed}
           language={language}
           activeComment={activeComment}
           selectedLineIds={selectedLineIds}
@@ -308,6 +445,7 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
           onDeleteComment={onDeleteComment}
         />
       ))}
+      </div>
     </div>
   );
 }

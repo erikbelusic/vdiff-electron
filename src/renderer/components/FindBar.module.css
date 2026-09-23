@@ -1,0 +1,66 @@
+.bar {
+  position: absolute;
+  top: 0.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.4rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-family: var(--font-family);
+  font-size: 12px;
+}
+
+.input {
+  width: 200px;
+  padding: 0.25rem 0.4rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--color-accent);
+}
+
+.status {
+  min-width: 64px;
+  padding: 0 0.25rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.noResults {
+  color: var(--color-danger);
+}
+
+.button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.button:hover:not(:disabled) {
+  background: rgba(177, 186, 196, 0.12);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

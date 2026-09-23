@@ -6,6 +6,8 @@ const SHORTCUTS = [
   { keys: '⌘1–9', description: 'Switch to tab' },
   { keys: '⌘↑', description: 'Previous file' },
   { keys: '⌘↓', description: 'Next file' },
+  { keys: '⌘F', description: 'Find in diff' },
+  { keys: '⌘G / ⌘⇧G', description: 'Next / previous match' },
   { keys: '⌘E', description: 'Toggle export panel' },
   { keys: '⌘⇧C', description: 'Copy comments to clipboard' },
   { keys: '⌘,', description: 'Settings' },

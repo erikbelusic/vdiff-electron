@@ -3,7 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { migrateStore, getProjects, addProject, removeProject, getRepositories, addRepository, removeRepository, getLastOpened, setLastOpened, getCompactOutput, setCompactOutput, getCommentExpiryDays, setCommentExpiryDays } from './store.js';
 import { getComments, saveComments, getGeneralComment, saveGeneralComment, getReviewedFiles, saveReviewedFiles, pruneExpiredBranches } from './commentsStore.js';
-import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff, listWorktrees, getRecentCommits, getCommitChangedFiles, getCommitFileDiff } from './git.js';
+import { isGitRepo, getCurrentBranch, getChangedFiles, getFileDiff, listWorktrees, getRecentCommits, getCommitChangedFiles, getCommitFileDiff, getFileContent } from './git.js';
 
 const GITHUB_OWNER = 'erikbelusic';
 const GITHUB_REPO = 'vdiff-electron';
@@ -127,6 +127,7 @@ ipcMain.handle('git:getFileDiff', (_event, repoPath, filePath) => getFileDiff(re
 ipcMain.handle('git:getRecentCommits', (_event, repoPath) => getRecentCommits(repoPath));
 ipcMain.handle('git:getCommitChangedFiles', (_event, repoPath, sha) => getCommitChangedFiles(repoPath, sha));
 ipcMain.handle('git:getCommitFileDiff', (_event, repoPath, sha, filePath) => getCommitFileDiff(repoPath, sha, filePath));
+ipcMain.handle('git:getFileContent', (_event, repoPath, filePath, sha) => getFileContent(repoPath, filePath, sha));
 
 // Update check
 ipcMain.handle('app:checkForUpdate', async () => {

@@ -23,6 +23,7 @@ beforeEach(() => {
   window.electronAPI = {
     getFileDiff: vi.fn(async () => MOCK_DIFF),
     getCommitFileDiff: vi.fn(async () => MOCK_DIFF),
+    getFileContent: vi.fn(async () => null),
   };
 });
 
@@ -329,4 +330,84 @@ test('navigating to a match in a collapsed hunk expands it', async () => {
   expect(screen.getByText((_, el) =>
     el.tagName === 'TD' && el.textContent === 'const a = 1;',
   )).toBeInTheDocument();
+});
+
+// A 50-line file where line 25 changed; the hunk shows lines 22–28
+const FULL_FILE = Array.from({ length: 50 }, (_, i) => (i === 24 ? 'changed 25' : `line ${i + 1}`)).join('\n') + '\n';
+const MIDDLE_DIFF = `diff --git a/notes.txt b/notes.txt
+--- a/notes.txt
++++ b/notes.txt
+@@ -22,7 +22,7 @@
+ line 22
+ line 23
+ line 24
+-line 25
++changed 25
+ line 26
+ line 27
+ line 28`;
+
+const codeCell = (text) => (_, el) => el?.tagName === 'TD' && el.textContent === text;
+
+async function renderMiddleDiff() {
+  window.electronAPI.getFileDiff = vi.fn(async () => MIDDLE_DIFF);
+  window.electronAPI.getFileContent = vi.fn(async () => FULL_FILE);
+  render(<DiffViewer repoPath="/repo" filePath="notes.txt" {...defaultProps} />);
+  await screen.findByText('21 hidden lines');
+}
+
+test('shows how many lines are hidden above and below the changes', async () => {
+  await renderMiddleDiff();
+  expect(screen.getByText('21 hidden lines')).toBeInTheDocument();
+  expect(screen.getByText('22 hidden lines')).toBeInTheDocument();
+  expect(screen.queryByText(codeCell('line 21'))).not.toBeInTheDocument();
+});
+
+test('expanding up reveals the lines just above the hunk, 20 at a time', async () => {
+  await renderMiddleDiff();
+  await userEvent.click(screen.getByRole('button', { name: 'Expand up' }));
+
+  expect(screen.getByText(codeCell('line 21'))).toBeInTheDocument();
+  expect(screen.getByText(codeCell('line 2'))).toBeInTheDocument();
+  expect(screen.queryByText(codeCell('line 1'))).not.toBeInTheDocument();
+  expect(screen.getByText('1 hidden line')).toBeInTheDocument();
+});
+
+test('expanding down reveals the lines just below the hunk', async () => {
+  await renderMiddleDiff();
+  await userEvent.click(screen.getByRole('button', { name: 'Expand down' }));
+
+  expect(screen.getByText(codeCell('line 29'))).toBeInTheDocument();
+  expect(screen.getByText(codeCell('line 48'))).toBeInTheDocument();
+  expect(screen.queryByText(codeCell('line 49'))).not.toBeInTheDocument();
+  expect(screen.getByText('2 hidden lines')).toBeInTheDocument();
+});
+
+test('expanding all on every gap shows the whole file', async () => {
+  await renderMiddleDiff();
+  for (const button of screen.getAllByRole('button', { name: 'Expand all' })) {
+    await userEvent.click(button);
+  }
+
+  expect(screen.getByText(codeCell('line 1'))).toBeInTheDocument();
+  expect(screen.getByText(codeCell('line 50'))).toBeInTheDocument();
+  expect(screen.queryByText(/hidden line/)).not.toBeInTheDocument();
+});
+
+test('find also searches expanded lines', async () => {
+  await renderMiddleDiff();
+  await userEvent.keyboard('{Meta>}f{/Meta}');
+  await userEvent.type(screen.getByRole('textbox', { name: 'Find in diff' }), 'line 1');
+  expect(screen.getByText('No results')).toBeInTheDocument();
+
+  await userEvent.click(screen.getAllByRole('button', { name: 'Expand all' })[0]);
+  // line 1, line 10–19
+  expect(screen.getByText('1 of 11')).toBeInTheDocument();
+});
+
+test('shows no expanders when the file content is unavailable', async () => {
+  window.electronAPI.getFileDiff = vi.fn(async () => MIDDLE_DIFF);
+  render(<DiffViewer repoPath="/repo" filePath="notes.txt" {...defaultProps} />);
+  await screen.findByText(codeCell('changed 25'));
+  expect(screen.queryByRole('button', { name: 'Expand all' })).not.toBeInTheDocument();
 });

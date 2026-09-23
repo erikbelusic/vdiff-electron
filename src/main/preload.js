@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getRecentCommits: (repoPath) => ipcRenderer.invoke('git:getRecentCommits', repoPath),
   getCommitChangedFiles: (repoPath, sha) => ipcRenderer.invoke('git:getCommitChangedFiles', repoPath, sha),
   getCommitFileDiff: (repoPath, sha, filePath) => ipcRenderer.invoke('git:getCommitFileDiff', repoPath, sha, filePath),
+  getFileContent: (repoPath, filePath, sha) => ipcRenderer.invoke('git:getFileContent', repoPath, filePath, sha),
   loadComments: (repoPath, branch) => ipcRenderer.invoke('comments:load', repoPath, branch),
   saveComments: (repoPath, branch, comments) => ipcRenderer.invoke('comments:save', repoPath, branch, comments),
   loadGeneralComment: (repoPath, branch) => ipcRenderer.invoke('comments:loadGeneral', repoPath, branch),

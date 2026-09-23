@@ -17,6 +17,7 @@ beforeEach(() => {
     getCurrentBranch: async () => 'main',
     getChangedFiles: async () => [],
     getFileDiff: async () => '',
+    getFileContent: async () => null,
     loadComments: async () => [],
     saveComments: async () => {},
     pruneExpiredBranches: async () => {},

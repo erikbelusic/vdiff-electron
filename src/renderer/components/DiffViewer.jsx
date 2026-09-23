@@ -1,14 +1,75 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Fragment } from 'react';
 import { parseDiff } from '../utils/parseDiff';
 import { getLanguage, highlightLine } from '../utils/highlight';
 import CommentInput from './CommentInput';
 import CommentDisplay from './CommentDisplay';
 import FindBar from './FindBar';
 import { findMatches } from '../utils/findMatches';
+import { EXPAND_STEP, computeGaps, revealGap, splitFileLines } from '../utils/contextGaps';
 import 'highlight.js/styles/github-dark.css';
 import styles from './DiffViewer.module.css';
 
 const PREFIX_MAP = { addition: '+', deletion: '-', context: ' ' };
+
+function contentProps(content, language) {
+  return language
+    ? { dangerouslySetInnerHTML: { __html: highlightLine(content, language) || escapeHtml(content) } }
+    : { children: content };
+}
+
+// Unchanged lines revealed from a gap between hunks (view-only, no commenting)
+function ContextLines({ lines, gapIdx, language }) {
+  return (
+    <table className={styles.table}>
+      <tbody>
+        {lines.map((line) => (
+          <tr key={line.newNum} className={`${styles.lineRow} ${styles.context}`}>
+            <td className={`${styles.lineNum} ${styles.staticNum}`}>{line.oldNum}</td>
+            <td className={`${styles.lineNum} ${styles.staticNum}`}>{line.newNum}</td>
+            <td className={`${styles.prefix} ${styles.staticNum}`}>{' '}</td>
+            <td
+              className={styles.content}
+              data-line-id={`g${gapIdx}-${line.newNum}`}
+              {...contentProps(line.content, language)}
+            />
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// The hidden stretch of the file before, between, or after hunks. "Expand down"
+// reveals lines below the previous hunk; "Expand up" reveals lines above the next.
+function Gap({ gapIdx, isFirst, isLast, topLines, bottomLines, hidden, language, onExpand }) {
+  const canDown = !isFirst;
+  const canUp = !isLast;
+  const small = hidden <= EXPAND_STEP;
+  return (
+    <div className={styles.gap}>
+      {topLines.length > 0 && <ContextLines lines={topLines} gapIdx={gapIdx} language={language} />}
+      {hidden > 0 && (
+        <div className={styles.expander}>
+          {!small && canDown && (
+            <button className={styles.expandBtn} onClick={() => onExpand(gapIdx, 'down')} aria-label="Expand down" title={`Show ${EXPAND_STEP} more lines`}>
+              {'↓'}
+            </button>
+          )}
+          {!small && canUp && (
+            <button className={styles.expandBtn} onClick={() => onExpand(gapIdx, 'up')} aria-label="Expand up" title={`Show ${EXPAND_STEP} more lines`}>
+              {'↑'}
+            </button>
+          )}
+          <button className={styles.expandBtn} onClick={() => onExpand(gapIdx, 'all')} aria-label="Expand all" title="Show all hidden lines">
+            {'↕'}
+          </button>
+          <span className={styles.hiddenCount}>{hidden} hidden {hidden === 1 ? 'line' : 'lines'}</span>
+        </div>
+      )}
+      {bottomLines.length > 0 && <ContextLines lines={bottomLines} gapIdx={gapIdx} language={language} />}
+    </div>
+  );
+}
 
 // Builds a DOM Range over [start, end) of an element's text, spanning the
 // syntax-highlighting spans it may be split across.
@@ -92,14 +153,8 @@ function Hunk({ hunk, hunkIdx, collapsed, onToggleCollapsed, language, activeCom
                   <td
                     className={styles.content}
                     data-line-id={lineId}
-                    dangerouslySetInnerHTML={
-                      language
-                        ? { __html: highlightLine(line.content, language) || escapeHtml(line.content) }
-                        : undefined
-                    }
-                  >
-                    {language ? undefined : line.content}
-                  </td>
+                    {...contentProps(line.content, language)}
+                  />
                 </tr>,
                 isActive && !activeComment.editId && activeComment.lineIds[activeComment.lineIds.length - 1] === lineId && (
                   <tr key={`comment-input-${lineIdx}`} className={styles.commentRow}>
@@ -156,8 +211,35 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
   const [findIndex, setFindIndex] = useState(0);
   const [findFocusKey, setFindFocusKey] = useState(0);
   const pendingScrollRef = useRef(false);
+  const [fileLines, setFileLines] = useState(null);
+  const [gapExpansion, setGapExpansion] = useState({}); // gapIdx -> { top, bottom }
 
-  const matches = useMemo(() => findMatches(hunks, findQuery), [hunks, findQuery]);
+  const gaps = useMemo(
+    () => (fileLines && hunks.length > 0 ? computeGaps(hunks, fileLines.length) : []),
+    [hunks, fileLines]
+  );
+  const revealedGaps = useMemo(
+    () => gaps.map((gap, i) => revealGap(gap, gapExpansion[i], fileLines)),
+    [gaps, gapExpansion, fileLines]
+  );
+
+  // Every rendered code line in display order, for find
+  const searchLines = useMemo(() => {
+    const out = [];
+    const pushGap = (gapIdx) => {
+      const r = revealedGaps[gapIdx];
+      if (!r) return;
+      [...r.topLines, ...r.bottomLines].forEach((l) => out.push({ lineId: `g${gapIdx}-${l.newNum}`, hunkIdx: null, content: l.content }));
+    };
+    hunks.forEach((hunk, hunkIdx) => {
+      pushGap(hunkIdx);
+      hunk.lines.forEach((l, lineIdx) => out.push({ lineId: `${hunkIdx}-${lineIdx}`, hunkIdx, content: l.content }));
+    });
+    pushGap(hunks.length);
+    return out;
+  }, [hunks, revealedGaps]);
+
+  const matches = useMemo(() => findMatches(searchLines, findQuery), [searchLines, findQuery]);
   const currentMatchIdx = matches.length ? Math.min(findIndex, matches.length - 1) : 0;
 
   const fileComments = useMemo(
@@ -174,12 +256,16 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
       const isNewFile = prevFileRef.current !== filePath;
       if (isNewFile) setLoading(true);
       prevFileRef.current = filePath;
-      const raw = commit
-        ? await window.electronAPI.getCommitFileDiff(repoPath, commit, filePath)
-        : await window.electronAPI.getFileDiff(repoPath, filePath);
+      const [raw, content] = await Promise.all([
+        commit
+          ? window.electronAPI.getCommitFileDiff(repoPath, commit, filePath)
+          : window.electronAPI.getFileDiff(repoPath, filePath),
+        window.electronAPI.getFileContent(repoPath, filePath, commit),
+      ]);
       const files = parseDiff(raw);
       const allHunks = files.flatMap((f) => f.hunks);
       setHunks(allHunks);
+      setFileLines(content == null ? null : splitFileLines(content));
       setLoading(false);
     }
     loadDiff();
@@ -191,8 +277,20 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
     dragRef.current = null;
     setSelectedLineIds(new Set());
     setCollapsedHunks(new Set());
+    setGapExpansion({});
     setFindIndex(0);
   }, [filePath]);
+
+  const expandGap = useCallback((gapIdx, direction) => {
+    setGapExpansion((prev) => {
+      const cur = prev[gapIdx] ?? { top: 0, bottom: 0 };
+      let next;
+      if (direction === 'all') next = { top: Infinity, bottom: 0 };
+      else if (direction === 'down') next = { ...cur, top: cur.top + EXPAND_STEP };
+      else next = { ...cur, bottom: cur.bottom + EXPAND_STEP };
+      return { ...prev, [gapIdx]: next };
+    });
+  }, []);
 
   const toggleCollapsed = useCallback((hunkIdx) => {
     setCollapsedHunks((prev) => {
@@ -206,10 +304,10 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
   const goToMatch = useCallback((index, matchList) => {
     if (matchList.length === 0) return;
     const wrapped = (index + matchList.length) % matchList.length;
-    const { hunkIdx } = matchList[wrapped];
+    const { hunkIdx } = matchList[wrapped].line;
     setFindIndex(wrapped);
     setCollapsedHunks((prev) => {
-      if (!prev.has(hunkIdx)) return prev;
+      if (hunkIdx == null || !prev.has(hunkIdx)) return prev;
       const next = new Set(prev);
       next.delete(hunkIdx);
       return next;
@@ -220,7 +318,7 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
   const handleFindQueryChange = (query) => {
     setFindQuery(query);
     setFindIndex(0);
-    goToMatch(0, findMatches(hunks, query));
+    goToMatch(0, findMatches(searchLines, query));
   };
   const handleFindNext = useCallback(() => goToMatch(currentMatchIdx + 1, matches), [goToMatch, currentMatchIdx, matches]);
   const handleFindPrev = useCallback(() => goToMatch(currentMatchIdx - 1, matches), [goToMatch, currentMatchIdx, matches]);
@@ -254,7 +352,7 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
       const cells = new Map();
       container.querySelectorAll('[data-line-id]').forEach((el) => cells.set(el.dataset.lineId, el));
       matches.forEach((m, i) => {
-        const cell = cells.get(`${m.hunkIdx}-${m.lineIdx}`);
+        const cell = cells.get(m.line.lineId);
         const range = cell && textRange(cell, m.start, m.end);
         if (!range) return;
         all.push(range);
@@ -387,6 +485,21 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
     clearSelection();
   };
 
+  const renderGap = (gapIdx) => {
+    const r = revealedGaps[gapIdx];
+    if (!r || r.topLines.length + r.bottomLines.length + r.hidden === 0) return null;
+    return (
+      <Gap
+        gapIdx={gapIdx}
+        isFirst={gapIdx === 0}
+        isLast={gapIdx === hunks.length}
+        {...r}
+        language={language}
+        onExpand={expandGap}
+      />
+    );
+  };
+
   if (!filePath) {
     return (
       <div className={styles.container}>
@@ -427,8 +540,9 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
       )}
       <div className={styles.container} ref={scrollRef}>
       {hunks.map((hunk, hunkIdx) => (
+        <Fragment key={hunkIdx}>
+        {renderGap(hunkIdx)}
         <Hunk
-          key={hunkIdx}
           hunk={hunk}
           hunkIdx={hunkIdx}
           collapsed={collapsedHunks.has(hunkIdx)}
@@ -444,7 +558,9 @@ function DiffViewer({ repoPath, filePath, commit, refreshKey, comments, onAddCom
           onEditComment={handleEditComment}
           onDeleteComment={onDeleteComment}
         />
+        </Fragment>
       ))}
+      {renderGap(hunks.length)}
       </div>
     </div>
   );

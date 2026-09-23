@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 function run(args, cwd) {
   return new Promise((resolve, reject) => {
@@ -167,6 +168,17 @@ export async function getFileDiff(dirPath, filePath) {
     });
   } catch {
     return '';
+  }
+}
+
+// Full contents of the file's new version — the working tree copy, or the
+// file as of `sha` when reviewing a commit. Used to expand diff context.
+export async function getFileContent(dirPath, filePath, sha) {
+  try {
+    if (sha) return await run(['show', `${sha}:${filePath}`], dirPath);
+    return await readFile(path.join(dirPath, filePath), 'utf8');
+  } catch {
+    return null;
   }
 }
 
